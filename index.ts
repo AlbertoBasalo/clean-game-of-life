@@ -8,22 +8,21 @@ canvas.width = width;
 canvas.height = height;
 const ctx = canvas.getContext('2d');
 
-const TILE_SIZE = 10;
-const TILES_X = Math.floor(width / TILE_SIZE);
-const TILES_Y = Math.floor(height / TILE_SIZE);
+const tiles_x = Math.floor(width / 10);
+const tiles_y = Math.floor(height / 10);
 
-ctx.fillStyle = 'rgb(100, 240, 150)';
-ctx.strokeStyle = 'rgb(90, 90, 90)';
+ctx.fillStyle = '#f73454';
+ctx.strokeStyle = '#f73454';
 ctx.lineWidth = 1;
 
-let isGamePaused = false;
+let paused = false;
 let gameSpeed = 1000;
 
 const prepareBoard = (): boolean[][] => {
   const b = [];
-  for (let i = 0; i < TILES_X; i++) {
+  for (let i = 0; i < tiles_x; i++) {
     const row = [];
-    for (let j = 0; j < TILES_Y; j++) {
+    for (let j = 0; j < tiles_y; j++) {
       row.push(false);
     }
     b.push(row);
@@ -37,45 +36,45 @@ const clear = () => {
   ctx.clearRect(0, 0, width, height);
 };
 const drawBorders = () => {
-  for (let i = 0; i < TILES_X; i++) {
+  for (let i = 0; i < tiles_x; i++) {
     ctx.beginPath();
-    ctx.moveTo(i * TILE_SIZE - 0.5, 0);
-    ctx.lineTo(i * TILE_SIZE - 0.5, height);
+    ctx.moveTo(i * 10 - 0.5, 0);
+    ctx.lineTo(i * 10 - 0.5, height);
     ctx.stroke();
   }
 
-  for (let j = 0; j < TILES_Y; j++) {
+  for (let j = 0; j < tiles_y; j++) {
     ctx.beginPath();
-    ctx.moveTo(0, j * TILE_SIZE - 0.5);
-    ctx.lineTo(width, j * TILE_SIZE - 0.5);
+    ctx.moveTo(0, j * 10 - 0.5);
+    ctx.lineTo(width, j * 10 - 0.5);
     ctx.stroke();
   }
 };
 
 const drawBoard = (board: boolean[][]) => {
-  for (let i = 0; i < TILES_X; i++) {
-    for (let j = 0; j < TILES_Y; j++) {
+  for (let i = 0; i < tiles_x; i++) {
+    for (let j = 0; j < tiles_y; j++) {
       if (!board[i][j]) {
         continue;
       }
-      ctx.fillRect(i * TILE_SIZE, j * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+      ctx.fillRect(i * 10, j * 10, 10, 10);
     }
   }
 };
 
-const isAlive = (x: number, y: number): number => {
-  if (x < 0 || x >= TILES_X || y < 0 || y >= TILES_Y) {
+const alive = (x: number, y: number): number => {
+  if (x < 0 || x >= tiles_x || y < 0 || y >= tiles_y) {
     return 0;
   }
   return BOARD[x][y] ? 1 : 0;
 };
 
-const neighborsCount = (x: number, y: number): number => {
+const neighborsCount = (i: number, j: number): number => {
   let count = 0;
-  for (let i of [-1, 0, 1]) {
-    for (let j of [-1, 0, 1]) {
-      if (!(i === 0 && j === 0)) {
-        count += isAlive(x + i, y + j);
+  for (let k of [-1, 0, 1]) {
+    for (let l of [-1, 0, 1]) {
+      if (!(k === 0 && l === 0)) {
+        count += alive(i + k, j + l);
       }
     }
   }
@@ -96,16 +95,25 @@ const makeGlider = (x: number, y: number): void => {
   BOARD[x + 2][y + 2] = true;
 };
 
-const computeNextGeneration = () => {
+
+
+const nextGeneration = () => {
   const board = prepareBoard();
-  for (let i = 0; i < TILES_X; i++) {
-    for (let j = 0; j < TILES_Y; j++) {
-      if (!isAlive(i, j)) {
-        if (neighborsCount(i, j) === 3) {
+  for (let i = 0; i < tiles_x; i++) {
+    for (let j = 0; j < tiles_y; j++) {
+      let count = 0;
+      for (let k of [-1, 0, 1]) {
+        for (let l of [-1, 0, 1]) {
+          if (!(k === 0 && l === 0)) {
+            count += alive(i + k, j + l);
+          }
+        }
+      }
+      if (!alive(i, j)) {
+        if (count === 3) {
           board[i][j] = true;
         }
       } else {
-        const count = neighborsCount(i, j);
         if (count == 2 || count == 3) {
           board[i][j] = true;
         }
@@ -136,10 +144,10 @@ const drawAll = () => {
 };
 
 const nextGen = () => {
-  if (isGamePaused) {
+  if (paused) {
     return;
   }
-  BOARD = computeNextGeneration();
+  BOARD = nextGeneration();
   drawAll();
 };
 
@@ -161,40 +169,40 @@ nextGenLoop();
 //     drawAll();
 // });
 
-let isDrawMode = true;
-let isMouseDown = false;
+let drawing = true;
+let mouseDown = false;
 
 const getPositionFromEvent = (e) => {
-  const x = Math.floor((e.clientX - canvas.offsetLeft) / TILE_SIZE);
-  const y = Math.floor((e.clientY - canvas.offsetTop) / TILE_SIZE);
+  const x = Math.floor((e.clientX - canvas.offsetLeft) / 10);
+  const y = Math.floor((e.clientY - canvas.offsetTop) / 10);
   return [x, y];
 };
 
 canvas.addEventListener('mousedown', (e) => {
-  isMouseDown = true;
+  mouseDown = true;
   const [x, y] = getPositionFromEvent(e);
-  isDrawMode = !BOARD[x][y];
-  BOARD[x][y] = isDrawMode;
+  drawing = !BOARD[x][y];
+  BOARD[x][y] = drawing;
   drawAll();
 });
 
 canvas.addEventListener('mousemove', (e) => {
-  if (!isMouseDown) {
+  if (!mouseDown) {
     return;
   }
   const [x, y] = getPositionFromEvent(e);
-  BOARD[x][y] = isDrawMode;
+  BOARD[x][y] = drawing;
   drawAll();
 });
 
 canvas.addEventListener('mouseup', () => {
-  isMouseDown = false;
+  mouseDown = false;
 });
 
 const generateRandom = () => {
   const board = prepareBoard();
-  for (let i = 0; i < TILES_X; i++) {
-    for (let j = 0; j < TILES_Y; j++) {
+  for (let i = 0; i < tiles_x; i++) {
+    for (let j = 0; j < tiles_y; j++) {
       board[i][j] = Math.random() > 0.9;
     }
   }
@@ -204,7 +212,7 @@ const generateRandom = () => {
 document.addEventListener('keydown', (e) => {
   console.log(e);
   if (e.key === 'p') {
-    isGamePaused = !isGamePaused;
+    paused = !paused;
   } else if (e.key === '+') {
     gameSpeed = Math.max(50, gameSpeed - 50);
   } else if (e.key === '-') {
