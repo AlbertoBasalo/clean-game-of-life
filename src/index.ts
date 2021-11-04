@@ -1,10 +1,7 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable max-lines */
 
 // https://medium.com/hypersphere-codes/conways-game-of-life-in-typescript-a955aec3bd49
 const canvas = document.querySelector<HTMLCanvasElement>("#game");
-// const width = canvas.width;
-// const height = canvas.height;
 const width = window.innerWidth;
 const height = window.innerHeight;
 canvas.width = width;
@@ -38,21 +35,6 @@ let BOARD = prepareBoard();
 const clear = () => {
   ctx.clearRect(0, 0, width, height);
 };
-const drawBorders = () => {
-  for (let i = 0; i < tiles_x; i++) {
-    ctx.beginPath();
-    ctx.moveTo(i * 10 - 0.5, 0);
-    ctx.lineTo(i * 10 - 0.5, height);
-    ctx.stroke();
-  }
-
-  for (let j = 0; j < tiles_y; j++) {
-    ctx.beginPath();
-    ctx.moveTo(0, j * 10 - 0.5);
-    ctx.lineTo(width, j * 10 - 0.5);
-    ctx.stroke();
-  }
-};
 
 const drawBoard = (board: boolean[][]) => {
   for (let i = 0; i < tiles_x; i++) {
@@ -73,31 +55,11 @@ const alive = (x: number, y: number): number => {
   return BOARD[x][y] ? 1 : 0;
 };
 
-const neighborsCount = (i: number, j: number): number => {
-  let count = 0;
-  for (const k of [-1, 0, 1]) {
-    for (const l of [-1, 0, 1]) {
-      if (!(k === 0 && l === 0)) {
-        count += alive(i + k, j + l);
-      }
-    }
-  }
-  return count;
-};
-
 BOARD[1][0] = true;
 BOARD[2][1] = true;
 BOARD[0][2] = true;
 BOARD[1][2] = true;
 BOARD[2][2] = true;
-
-const makeGlider = (x: number, y: number): void => {
-  BOARD[x + 1][y] = true;
-  BOARD[x + 2][y + 1] = true;
-  BOARD[x][y + 2] = true;
-  BOARD[x + 1][y + 2] = true;
-  BOARD[x + 2][y + 2] = true;
-};
 
 const nextGeneration = () => {
   const board = prepareBoard();
@@ -125,24 +87,9 @@ const nextGeneration = () => {
   return board;
 };
 
-// BOARD[4][5] = true;
-// BOARD[10][10] = true;
-
-// BOARD[0][0] = true;
-// BOARD[1][0] = true;
-
-// makeGlider(20, 20);
-// makeGlider(0, 0);
-// makeGlider(5, 10);
-// makeGlider(10, 20);
-// for(let i=0;i<40;i+=10) {
-//     makeGlider(i,i);
-// }
-
 const drawAll = () => {
   clear();
   drawBoard(BOARD);
-  // drawBorders();
 };
 
 const nextGen = () => {
@@ -159,17 +106,6 @@ const nextGenLoop = () => {
 };
 
 nextGenLoop();
-
-// canvas.addEventListener("click", e => {
-//     console.log("CLICK");
-//     console.log(e.clientX - canvas.offsetLeft, e.clientY - canvas.offsetTop);
-
-//     const x = Math.floor( (e.clientX - canvas.offsetLeft) / TILE_SIZE);
-//     const y = Math.floor( (e.clientY - canvas.offsetTop) / TILE_SIZE);
-//     console.log(x, y);
-//     BOARD[x][y] = !BOARD[x][y];
-//     drawAll();
-// });
 
 let drawing = true;
 let mouseDown = false;

@@ -8,3 +8,6 @@
 - Install a tool like ESLint
 `npm i -D eslint eslint-config-prettier eslint-plugin-prettier @typescript-eslint/eslint-plugin @typescript-eslint/parser`
 
+- Commented and dead code
+
+- Folder src

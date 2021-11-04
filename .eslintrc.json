@@ -6,10 +6,7 @@
     "plugin:@typescript-eslint/eslint-recommended",
     "plugin:@typescript-eslint/recommended"
   ],
-  "plugins": [
-    "prettier",
-    "@typescript-eslint"
-  ],
+  "plugins": ["prettier", "@typescript-eslint"],
   "env": {
     "browser": true,
     "es6": true,
@@ -17,10 +14,7 @@
   },
   "globals": {},
   "rules": {
-    "max-lines": [
-      "warn",
-      160
-    ],
+    "max-lines": ["warn", 160],
     "no-multiple-empty-lines": [
       "warn",
       {
