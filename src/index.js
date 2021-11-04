@@ -1,16 +1,16 @@
 /* eslint-disable max-lines */
 // https://medium.com/hypersphere-codes/conways-game-of-life-in-typescript-a955aec3bd49
 const canvas = document.querySelector("#game");
-const ctx = canvas.getContext("2d");
+const context = canvas.getContext("2d");
 const width = window.innerWidth;
 const height = window.innerHeight;
 const columnsCount = Math.floor(width / 10);
 const rowsCount = Math.floor(height / 10);
 canvas.width = width;
 canvas.height = height;
-ctx.fillStyle = "#f73454";
-ctx.strokeStyle = "#f73454";
-ctx.lineWidth = 1;
+context.fillStyle = "#f73454";
+context.strokeStyle = "#f73454";
+context.lineWidth = 1;
 let isPaused = false;
 let gameSpeedMsLoop = 1000;
 const prepareBoard = () => {
@@ -25,8 +25,8 @@ const prepareBoard = () => {
     return board;
 };
 let gameBoard = prepareBoard();
-const clear = () => {
-    ctx.clearRect(0, 0, width, height);
+const clearCanvas = () => {
+    context.clearRect(0, 0, width, height);
 };
 const drawBoard = (board) => {
     for (let columnNumber = 0; columnNumber < columnsCount; columnNumber++) {
@@ -34,11 +34,11 @@ const drawBoard = (board) => {
             if (!board[columnNumber][rowNumber]) {
                 continue;
             }
-            ctx.fillRect(columnNumber * 10, rowNumber * 10, 10, 10);
+            context.fillRect(columnNumber * 10, rowNumber * 10, 10, 10);
         }
     }
 };
-const alive = (columnNumber, rowNumber) => {
+const isAlive = (columnNumber, rowNumber) => {
     if (columnNumber < 0 ||
         columnNumber >= columnsCount ||
         rowNumber < 0 ||
@@ -52,7 +52,7 @@ gameBoard[2][1] = true;
 gameBoard[0][2] = true;
 gameBoard[1][2] = true;
 gameBoard[2][2] = true;
-const nextGeneration = () => {
+const calculateNextGeneration = () => {
     const board = prepareBoard();
     for (let columnNumber = 0; columnNumber < columnsCount; columnNumber++) {
         for (let rowNumber = 0; rowNumber < rowsCount; rowNumber++) {
@@ -60,11 +60,11 @@ const nextGeneration = () => {
             for (const deltaRow of [-1, 0, 1]) {
                 for (const deltaColumn of [-1, 0, 1]) {
                     if (!(deltaRow === 0 && deltaColumn === 0)) {
-                        countLiveNeighbors += alive(columnNumber + deltaRow, rowNumber + deltaColumn);
+                        countLiveNeighbors += isAlive(columnNumber + deltaRow, rowNumber + deltaColumn);
                     }
                 }
             }
-            if (!alive(columnNumber, rowNumber)) {
+            if (!isAlive(columnNumber, rowNumber)) {
                 if (countLiveNeighbors === 3) {
                     board[columnNumber][rowNumber] = true;
                 }
@@ -78,43 +78,43 @@ const nextGeneration = () => {
     }
     return board;
 };
-const drawAll = () => {
-    clear();
+const redraw = () => {
+    clearCanvas();
     drawBoard(gameBoard);
 };
-const nextGen = () => {
+const drawNextGeneration = () => {
     if (isPaused) {
         return;
     }
-    gameBoard = nextGeneration();
-    drawAll();
+    gameBoard = calculateNextGeneration();
+    redraw();
 };
 const nextGenLoop = () => {
-    nextGen();
+    drawNextGeneration();
     setTimeout(nextGenLoop, gameSpeedMsLoop);
 };
 nextGenLoop();
 let isDrawing = true;
 let isMouseDown = false;
-function getPositionFromEvent(mouseEvent) {
+function getPositionFromMouseEvent(mouseEvent) {
     const columnNumber = Math.floor((mouseEvent.clientX - canvas.offsetLeft) / 10);
     const rowNumber = Math.floor((mouseEvent.clientY - canvas.offsetTop) / 10);
     return [columnNumber, rowNumber];
 }
 canvas.addEventListener("mousedown", mouseEvent => {
     isMouseDown = true;
-    const [columnNumber, rowNumber] = getPositionFromEvent(mouseEvent);
+    const [columnNumber, rowNumber] = getPositionFromMouseEvent(mouseEvent);
     isDrawing = !gameBoard[columnNumber][rowNumber];
     gameBoard[columnNumber][rowNumber] = isDrawing;
-    drawAll();
+    redraw();
 });
 canvas.addEventListener("mousemove", mouseEvent => {
     if (!isMouseDown) {
         return;
     }
-    const [columnNumber, rowNumber] = getPositionFromEvent(mouseEvent);
+    const [columnNumber, rowNumber] = getPositionFromMouseEvent(mouseEvent);
     gameBoard[columnNumber][rowNumber] = isDrawing;
-    drawAll();
+    redraw();
 });
 canvas.addEventListener("mouseup", () => {
     isMouseDown = false;
@@ -141,22 +141,22 @@ document.addEventListener("keydown", keyBoardEvent => {
     }
     else if (keyBoardEvent.key === "r") {
         gameBoard = generateRandom();
-        drawAll();
+        redraw();
     }
     else if (keyBoardEvent.key === "c") {
         gameBoard = prepareBoard();
-        drawAll();
+        redraw();
     }
 });
 /* MODAL */
 const helpButton = document.querySelector("#help-btn");
 const helpModal = document.querySelector("#help-msg");
-const toggleModal = () => {
+const toggleHelpModal = () => {
     helpModal.classList.toggle("hidden");
 };
 document.addEventListener("keydown", keyboardEvent => {
     if (keyboardEvent.key === "?") {
-        toggleModal();
+        toggleHelpModal();
     }
 });
-helpButton.addEventListener("click", toggleModal);
+helpButton.addEventListener("click", toggleHelpModal);
