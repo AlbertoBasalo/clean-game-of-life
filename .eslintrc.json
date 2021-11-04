@@ -6,7 +6,10 @@
     "plugin:@typescript-eslint/eslint-recommended",
     "plugin:@typescript-eslint/recommended"
   ],
-  "plugins": ["prettier", "@typescript-eslint"],
+  "plugins": [
+    "prettier",
+    "@typescript-eslint"
+  ],
   "env": {
     "browser": true,
     "es6": true,
@@ -14,7 +17,16 @@
   },
   "globals": {},
   "rules": {
-    "max-lines": ["warn", 160],
+    "prettier/prettier": [
+      "error",
+      {
+        "endOfLine": "auto"
+      }
+    ],
+    "max-lines": [
+      "warn",
+      160
+    ],
     "no-multiple-empty-lines": [
       "warn",
       {
@@ -22,10 +34,17 @@
         "maxEOF": 1
       }
     ],
-    "prettier/prettier": [
-      "error",
+    "no-magic-numbers": [
+      "warn",
       {
-        "endOfLine": "auto"
+        "detectObjects": false,
+        "enforceConst": true,
+        "ignore": [
+          -1,
+          0,
+          1
+        ],
+        "ignoreArrayIndexes": true
       }
     ]
   },

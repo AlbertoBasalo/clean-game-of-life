@@ -1,24 +1,50 @@
 /* eslint-disable max-lines */
 // https://medium.com/hypersphere-codes/conways-game-of-life-in-typescript-a955aec3bd49
-const canvas = document.querySelector("#game");
-const context = canvas.getContext("2d");
+const CANVAS_ID = "#game";
+const CONTEXT_TYPE = "2d";
+const TILE_WITH = 10;
+const CONTEXT_CONFIG = {
+    fillStyle: "#f73454",
+    strokeStyle: "#f73454",
+    lineWidth: 1,
+};
+const INITIAL_SPEED_LOOP_MS = 1000;
+const MINIMUM_NEIGHBORS_TO_KEEP_ALIVE = 2;
+const MAXIMUM_NEIGHBORS_TO_KEEP_ALIVE = 3;
+const NEIGHBORS_TO_BORN = 3;
+const ALIVE = true;
+const DEAD = false;
+const LIVING_CHANCE = 0.9;
+const MINIMUM_SPEED_GAME_MS = 50;
+const MAXIMUM_SPEED_GAME_MS = 2000;
+const DELTA_SPEED_GAME_MS = 50;
+const HELP_BUTTON_ID = "#help-btn";
+const HELP_MODAL_ID = "#help-msg";
+const PAUSE_KEY = "p";
+const INCREASE_KEY = "+";
+const DECREASE_KEY = "-";
+const RANDOM_KEY = "r";
+const CLEAR_KEY = "c";
+const HELP_KEY = "?";
+const canvas = document.querySelector(CANVAS_ID);
+const context = canvas.getContext(CONTEXT_TYPE);
 const width = window.innerWidth;
 const height = window.innerHeight;
-const columnsCount = Math.floor(width / 10);
-const rowsCount = Math.floor(height / 10);
+const columnsCount = Math.floor(width / TILE_WITH);
+const rowsCount = Math.floor(height / TILE_WITH);
 canvas.width = width;
 canvas.height = height;
-context.fillStyle = "#f73454";
-context.strokeStyle = "#f73454";
-context.lineWidth = 1;
+context.fillStyle = CONTEXT_CONFIG.fillStyle;
+context.strokeStyle = CONTEXT_CONFIG.strokeStyle;
+context.lineWidth = CONTEXT_CONFIG.lineWidth;
 let isPaused = false;
-let gameSpeedMsLoop = 1000;
+let gameSpeedLoopMs = INITIAL_SPEED_LOOP_MS;
 const prepareBoard = () => {
     const board = [];
     for (let columnNumber = 0; columnNumber < columnsCount; columnNumber++) {
         const row = [];
         for (let rowNumber = 0; rowNumber < rowsCount; rowNumber++) {
-            row.push(false);
+            row.push(DEAD);
         }
         board.push(row);
     }
@@ -34,7 +60,7 @@ const drawBoard = (board) => {
             if (!board[columnNumber][rowNumber]) {
                 continue;
             }
-            context.fillRect(columnNumber * 10, rowNumber * 10, 10, 10);
+            context.fillRect(columnNumber * TILE_WITH, rowNumber * TILE_WITH, TILE_WITH, TILE_WITH);
         }
     }
 };
@@ -47,11 +73,11 @@ const isAlive = (columnNumber, rowNumber) => {
     }
     return gameBoard[columnNumber][rowNumber] ? 1 : 0;
 };
-gameBoard[1][0] = true;
-gameBoard[2][1] = true;
-gameBoard[0][2] = true;
-gameBoard[1][2] = true;
-gameBoard[2][2] = true;
+gameBoard[1][0] = ALIVE;
+gameBoard[2][1] = ALIVE;
+gameBoard[0][2] = ALIVE;
+gameBoard[1][2] = ALIVE;
+gameBoard[2][2] = ALIVE;
 const calculateNextGeneration = () => {
     const board = prepareBoard();
     for (let columnNumber = 0; columnNumber < columnsCount; columnNumber++) {
@@ -65,13 +91,14 @@ const calculateNextGeneration = () => {
                 }
             }
             if (!isAlive(columnNumber, rowNumber)) {
-                if (countLiveNeighbors === 3) {
-                    board[columnNumber][rowNumber] = true;
+                if (countLiveNeighbors === NEIGHBORS_TO_BORN) {
+                    board[columnNumber][rowNumber] = ALIVE;
                 }
             }
             else {
-                if (countLiveNeighbors == 2 || countLiveNeighbors == 3) {
-                    board[columnNumber][rowNumber] = true;
+                if (countLiveNeighbors == MINIMUM_NEIGHBORS_TO_KEEP_ALIVE ||
+                    countLiveNeighbors == MAXIMUM_NEIGHBORS_TO_KEEP_ALIVE) {
+                    board[columnNumber][rowNumber] = ALIVE;
                 }
             }
         }
@@ -91,14 +118,14 @@ const drawNextGeneration = () => {
 };
 const nextGenLoop = () => {
     drawNextGeneration();
-    setTimeout(nextGenLoop, gameSpeedMsLoop);
+    setTimeout(nextGenLoop, gameSpeedLoopMs);
 };
 nextGenLoop();
 let isDrawing = true;
 let isMouseDown = false;
 function getPositionFromMouseEvent(mouseEvent) {
-    const columnNumber = Math.floor((mouseEvent.clientX - canvas.offsetLeft) / 10);
-    const rowNumber = Math.floor((mouseEvent.clientY - canvas.offsetTop) / 10);
+    const columnNumber = Math.floor((mouseEvent.clientX - canvas.offsetLeft) / TILE_WITH);
+    const rowNumber = Math.floor((mouseEvent.clientY - canvas.offsetTop) / TILE_WITH);
     return [columnNumber, rowNumber];
 }
 canvas.addEventListener("mousedown", mouseEvent => {
@@ -123,39 +150,39 @@ const generateRandom = () => {
     const board = prepareBoard();
     for (let columnNumber = 0; columnNumber < columnsCount; columnNumber++) {
         for (let rowNumber = 0; rowNumber < rowsCount; rowNumber++) {
-            board[columnNumber][rowNumber] = Math.random() > 0.9;
+            board[columnNumber][rowNumber] = Math.random() > LIVING_CHANCE;
         }
     }
     return board;
 };
 document.addEventListener("keydown", keyBoardEvent => {
     console.log(keyBoardEvent);
-    if (keyBoardEvent.key === "p") {
+    if (keyBoardEvent.key === PAUSE_KEY) {
         isPaused = !isPaused;
     }
-    else if (keyBoardEvent.key === "+") {
-        gameSpeedMsLoop = Math.max(50, gameSpeedMsLoop - 50);
+    else if (keyBoardEvent.key === INCREASE_KEY) {
+        gameSpeedLoopMs = Math.max(MINIMUM_SPEED_GAME_MS, gameSpeedLoopMs - DELTA_SPEED_GAME_MS);
     }
-    else if (keyBoardEvent.key === "-") {
-        gameSpeedMsLoop = Math.min(2000, gameSpeedMsLoop + 50);
+    else if (keyBoardEvent.key === DECREASE_KEY) {
+        gameSpeedLoopMs = Math.min(MAXIMUM_SPEED_GAME_MS, gameSpeedLoopMs + DELTA_SPEED_GAME_MS);
     }
-    else if (keyBoardEvent.key === "r") {
+    else if (keyBoardEvent.key === RANDOM_KEY) {
         gameBoard = generateRandom();
         redraw();
     }
-    else if (keyBoardEvent.key === "c") {
+    else if (keyBoardEvent.key === CLEAR_KEY) {
         gameBoard = prepareBoard();
         redraw();
     }
 });
 /* MODAL */
-const helpButton = document.querySelector("#help-btn");
-const helpModal = document.querySelector("#help-msg");
+const helpButton = document.querySelector(HELP_BUTTON_ID);
+const helpModal = document.querySelector(HELP_MODAL_ID);
 const toggleHelpModal = () => {
     helpModal.classList.toggle("hidden");
 };
 document.addEventListener("keydown", keyboardEvent => {
-    if (keyboardEvent.key === "?") {
+    if (keyboardEvent.key === HELP_KEY) {
         toggleHelpModal();
     }
 });
