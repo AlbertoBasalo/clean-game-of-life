@@ -51,14 +51,9 @@ const drawBorders = () => {
   }
 };
 
-
-
-
 const drawBoard = (board: boolean[][]) => {
   for (let i = 0; i < tiles_x; i++) {
     for (let j = 0; j < tiles_y; j++) {
-
-
       if (!board[i][j]) {
         continue;
       }
@@ -104,8 +99,6 @@ const nextGeneration = () => {
   const board = prepareBoard();
   for (let i = 0; i < tiles_x; i++) {
     for (let j = 0; j < tiles_y; j++) {
-
-
       let count = 0;
       for (let k of [-1, 0, 1]) {
         for (let l of [-1, 0, 1]) {
@@ -116,7 +109,7 @@ const nextGeneration = () => {
       }
       if (!alive(i, j)) {
         if (count === 3) {
-            board[i][j] = true;
+          board[i][j] = true;
         }
       } else {
         if (count == 2 || count == 3) {
@@ -156,9 +149,6 @@ const nextGen = () => {
   drawAll();
 };
 
-
-
-
 const nextGenLoop = () => {
   nextGen();
   setTimeout(nextGenLoop, gameSpeed);
@@ -180,13 +170,13 @@ nextGenLoop();
 let drawing = true;
 let mouseDown = false;
 
-function getPositionFromEvent(e){
+function getPositionFromEvent(e) {
   const x = Math.floor((e.clientX - canvas.offsetLeft) / 10);
   const y = Math.floor((e.clientY - canvas.offsetTop) / 10);
   return [x, y];
-};
+}
 
-canvas.addEventListener("mousedown", (e) => {
+canvas.addEventListener("mousedown", e => {
   mouseDown = true;
   const [x, y] = getPositionFromEvent(e);
   drawing = !BOARD[x][y];
@@ -194,10 +184,10 @@ canvas.addEventListener("mousedown", (e) => {
   drawAll();
 });
 
-canvas.addEventListener('mousemove', (e) => {
-    if (!mouseDown) {
-     return;
-    }
+canvas.addEventListener("mousemove", e => {
+  if (!mouseDown) {
+    return;
+  }
   const [x, y] = getPositionFromEvent(e);
   BOARD[x][y] = drawing;
   drawAll();
@@ -210,14 +200,14 @@ canvas.addEventListener("mouseup", () => {
 const generateRandom = () => {
   const board = prepareBoard();
   for (let i = 0; i < tiles_x; i++) {
-      for (let j = 0; j < tiles_y; j++) {
-        board[i][j] = Math.random() > 0.9;
-      }
+    for (let j = 0; j < tiles_y; j++) {
+      board[i][j] = Math.random() > 0.9;
+    }
   }
   return board;
 };
 
-document.addEventListener("keydown", (e) => {
+document.addEventListener("keydown", e => {
   console.log(e);
   if (e.key === "p") {
     paused = !paused;
@@ -242,8 +232,10 @@ const toggleModal = () => {
   modal.classList.toggle("hidden");
 };
 
-document.addEventListener("keydown", (e) => {
-  if (e.key === "?") { toggleModal(); }
+document.addEventListener("keydown", e => {
+  if (e.key === "?") {
+    toggleModal();
+  }
 });
 
 btn.addEventListener("click", toggleModal);

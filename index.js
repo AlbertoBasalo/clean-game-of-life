@@ -152,15 +152,14 @@ function getPositionFromEvent(e) {
     const y = Math.floor((e.clientY - canvas.offsetTop) / 10);
     return [x, y];
 }
-;
-canvas.addEventListener("mousedown", (e) => {
+canvas.addEventListener("mousedown", e => {
     mouseDown = true;
     const [x, y] = getPositionFromEvent(e);
     drawing = !BOARD[x][y];
     BOARD[x][y] = drawing;
     drawAll();
 });
-canvas.addEventListener('mousemove', (e) => {
+canvas.addEventListener("mousemove", e => {
     if (!mouseDown) {
         return;
     }
@@ -180,7 +179,7 @@ const generateRandom = () => {
     }
     return board;
 };
-document.addEventListener("keydown", (e) => {
+document.addEventListener("keydown", e => {
     console.log(e);
     if (e.key === "p") {
         paused = !paused;
@@ -206,7 +205,7 @@ const modal = document.querySelector("#help-msg");
 const toggleModal = () => {
     modal.classList.toggle("hidden");
 };
-document.addEventListener("keydown", (e) => {
+document.addEventListener("keydown", e => {
     if (e.key === "?") {
         toggleModal();
     }
