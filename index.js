@@ -1,16 +1,16 @@
 // https://medium.com/hypersphere-codes/conways-game-of-life-in-typescript-a955aec3bd49
-const canvas = document.querySelector('#game');
+const canvas = document.querySelector("#game");
 // const width = canvas.width;
 // const height = canvas.height;
 const width = window.innerWidth;
 const height = window.innerHeight;
 canvas.width = width;
 canvas.height = height;
-const ctx = canvas.getContext('2d');
+const ctx = canvas.getContext("2d");
 const tiles_x = Math.floor(width / 10);
 const tiles_y = Math.floor(height / 10);
-ctx.fillStyle = '#f73454';
-ctx.strokeStyle = '#f73454';
+ctx.fillStyle = "#f73454";
+ctx.strokeStyle = "#f73454";
 ctx.lineWidth = 1;
 let paused = false;
 let gameSpeed = 1000;
@@ -147,12 +147,13 @@ nextGenLoop();
 // });
 let drawing = true;
 let mouseDown = false;
-const getPositionFromEvent = (e) => {
+function getPositionFromEvent(e) {
     const x = Math.floor((e.clientX - canvas.offsetLeft) / 10);
     const y = Math.floor((e.clientY - canvas.offsetTop) / 10);
     return [x, y];
-};
-canvas.addEventListener('mousedown', (e) => {
+}
+;
+canvas.addEventListener("mousedown", (e) => {
     mouseDown = true;
     const [x, y] = getPositionFromEvent(e);
     drawing = !BOARD[x][y];
@@ -167,7 +168,7 @@ canvas.addEventListener('mousemove', (e) => {
     BOARD[x][y] = drawing;
     drawAll();
 });
-canvas.addEventListener('mouseup', () => {
+canvas.addEventListener("mouseup", () => {
     mouseDown = false;
 });
 const generateRandom = () => {
@@ -179,35 +180,35 @@ const generateRandom = () => {
     }
     return board;
 };
-document.addEventListener('keydown', (e) => {
+document.addEventListener("keydown", (e) => {
     console.log(e);
-    if (e.key === 'p') {
+    if (e.key === "p") {
         paused = !paused;
     }
-    else if (e.key === '+') {
+    else if (e.key === "+") {
         gameSpeed = Math.max(50, gameSpeed - 50);
     }
-    else if (e.key === '-') {
+    else if (e.key === "-") {
         gameSpeed = Math.min(2000, gameSpeed + 50);
     }
-    else if (e.key === 'r') {
+    else if (e.key === "r") {
         BOARD = generateRandom();
         drawAll();
     }
-    else if (e.key === 'c') {
+    else if (e.key === "c") {
         BOARD = prepareBoard();
         drawAll();
     }
 });
 /* MODAL */
-const btn = document.querySelector('#help-btn');
-const modal = document.querySelector('#help-msg');
+const btn = document.querySelector("#help-btn");
+const modal = document.querySelector("#help-msg");
 const toggleModal = () => {
-    modal.classList.toggle('hidden');
+    modal.classList.toggle("hidden");
 };
-document.addEventListener('keydown', (e) => {
-    if (e.key === '?') {
+document.addEventListener("keydown", (e) => {
+    if (e.key === "?") {
         toggleModal();
     }
 });
-btn.addEventListener('click', toggleModal);
+btn.addEventListener("click", toggleModal);
