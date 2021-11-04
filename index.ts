@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable max-lines */
+
 // https://medium.com/hypersphere-codes/conways-game-of-life-in-typescript-a955aec3bd49
 const canvas = document.querySelector<HTMLCanvasElement>("#game");
 // const width = canvas.width;
@@ -66,13 +69,14 @@ const alive = (x: number, y: number): number => {
   if (x < 0 || x >= tiles_x || y < 0 || y >= tiles_y) {
     return 0;
   }
+
   return BOARD[x][y] ? 1 : 0;
 };
 
 const neighborsCount = (i: number, j: number): number => {
   let count = 0;
-  for (let k of [-1, 0, 1]) {
-    for (let l of [-1, 0, 1]) {
+  for (const k of [-1, 0, 1]) {
+    for (const l of [-1, 0, 1]) {
       if (!(k === 0 && l === 0)) {
         count += alive(i + k, j + l);
       }
@@ -100,8 +104,8 @@ const nextGeneration = () => {
   for (let i = 0; i < tiles_x; i++) {
     for (let j = 0; j < tiles_y; j++) {
       let count = 0;
-      for (let k of [-1, 0, 1]) {
-        for (let l of [-1, 0, 1]) {
+      for (const k of [-1, 0, 1]) {
+        for (const l of [-1, 0, 1]) {
           if (!(k === 0 && l === 0)) {
             count += alive(i + k, j + l);
           }
