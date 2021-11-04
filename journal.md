@@ -15,3 +15,4 @@
 ## 2 - Name
 
 - Variables and arguments
+- Function names
