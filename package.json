@@ -1,6 +1,11 @@
 {
-  "name": "typescript",
+  "name": "game-of-life-1",
   "version": "0.0.0",
   "private": true,
-  "dependencies": {}
+  "dependencies": {
+    "typescript": "^4.4.4"
+  },
+  "scripts": {
+    "build": "tsc"
+  }
 }
