@@ -1,74 +1,77 @@
 /* eslint-disable max-lines */
 // https://medium.com/hypersphere-codes/conways-game-of-life-in-typescript-a955aec3bd49
 const canvas = document.querySelector("#game");
+const ctx = canvas.getContext("2d");
 const width = window.innerWidth;
 const height = window.innerHeight;
+const columnsCount = Math.floor(width / 10);
+const rowsCount = Math.floor(height / 10);
 canvas.width = width;
 canvas.height = height;
-const ctx = canvas.getContext("2d");
-const tiles_x = Math.floor(width / 10);
-const tiles_y = Math.floor(height / 10);
 ctx.fillStyle = "#f73454";
 ctx.strokeStyle = "#f73454";
 ctx.lineWidth = 1;
-let paused = false;
-let gameSpeed = 1000;
+let isPaused = false;
+let gameSpeedMsLoop = 1000;
 const prepareBoard = () => {
-    const b = [];
-    for (let i = 0; i < tiles_x; i++) {
+    const board = [];
+    for (let columnNumber = 0; columnNumber < columnsCount; columnNumber++) {
         const row = [];
-        for (let j = 0; j < tiles_y; j++) {
+        for (let rowNumber = 0; rowNumber < rowsCount; rowNumber++) {
             row.push(false);
         }
-        b.push(row);
+        board.push(row);
     }
-    return b;
+    return board;
 };
-let BOARD = prepareBoard();
+let gameBoard = prepareBoard();
 const clear = () => {
     ctx.clearRect(0, 0, width, height);
 };
 const drawBoard = (board) => {
-    for (let i = 0; i < tiles_x; i++) {
-        for (let j = 0; j < tiles_y; j++) {
-            if (!board[i][j]) {
+    for (let columnNumber = 0; columnNumber < columnsCount; columnNumber++) {
+        for (let rowNumber = 0; rowNumber < rowsCount; rowNumber++) {
+            if (!board[columnNumber][rowNumber]) {
                 continue;
             }
-            ctx.fillRect(i * 10, j * 10, 10, 10);
+            ctx.fillRect(columnNumber * 10, rowNumber * 10, 10, 10);
         }
     }
 };
-const alive = (x, y) => {
-    if (x < 0 || x >= tiles_x || y < 0 || y >= tiles_y) {
+const alive = (columnNumber, rowNumber) => {
+    if (columnNumber < 0 ||
+        columnNumber >= columnsCount ||
+        rowNumber < 0 ||
+        rowNumber >= rowsCount) {
         return 0;
     }
-    return BOARD[x][y] ? 1 : 0;
+    return gameBoard[columnNumber][rowNumber] ? 1 : 0;
 };
-BOARD[1][0] = true;
-BOARD[2][1] = true;
-BOARD[0][2] = true;
-BOARD[1][2] = true;
-BOARD[2][2] = true;
+gameBoard[1][0] = true;
+gameBoard[2][1] = true;
+gameBoard[0][2] = true;
+gameBoard[1][2] = true;
+gameBoard[2][2] = true;
 const nextGeneration = () => {
     const board = prepareBoard();
-    for (let i = 0; i < tiles_x; i++) {
-        for (let j = 0; j < tiles_y; j++) {
-            let count = 0;
-            for (const k of [-1, 0, 1]) {
-                for (const l of [-1, 0, 1]) {
-                    if (!(k === 0 && l === 0)) {
-                        count += alive(i + k, j + l);
+    for (let columnNumber = 0; columnNumber < columnsCount; columnNumber++) {
+        for (let rowNumber = 0; rowNumber < rowsCount; rowNumber++) {
+            let countLiveNeighbors = 0;
+            for (const deltaRow of [-1, 0, 1]) {
+                for (const deltaColumn of [-1, 0, 1]) {
+                    if (!(deltaRow === 0 && deltaColumn === 0)) {
+                        countLiveNeighbors += alive(columnNumber + deltaRow, rowNumber + deltaColumn);
                     }
                 }
             }
-            if (!alive(i, j)) {
-                if (count === 3) {
-                    board[i][j] = true;
+            if (!alive(columnNumber, rowNumber)) {
+                if (countLiveNeighbors === 3) {
+                    board[columnNumber][rowNumber] = true;
                 }
             }
             else {
-                if (count == 2 || count == 3) {
-                    board[i][j] = true;
+                if (countLiveNeighbors == 2 || countLiveNeighbors == 3) {
+                    board[columnNumber][rowNumber] = true;
                 }
             }
         }
@@ -77,83 +80,83 @@ const nextGeneration = () => {
 };
 const drawAll = () => {
     clear();
-    drawBoard(BOARD);
+    drawBoard(gameBoard);
 };
 const nextGen = () => {
-    if (paused) {
+    if (isPaused) {
         return;
     }
-    BOARD = nextGeneration();
+    gameBoard = nextGeneration();
     drawAll();
 };
 const nextGenLoop = () => {
     nextGen();
-    setTimeout(nextGenLoop, gameSpeed);
+    setTimeout(nextGenLoop, gameSpeedMsLoop);
 };
 nextGenLoop();
-let drawing = true;
-let mouseDown = false;
-function getPositionFromEvent(e) {
-    const x = Math.floor((e.clientX - canvas.offsetLeft) / 10);
-    const y = Math.floor((e.clientY - canvas.offsetTop) / 10);
-    return [x, y];
+let isDrawing = true;
+let isMouseDown = false;
+function getPositionFromEvent(mouseEvent) {
+    const columnNumber = Math.floor((mouseEvent.clientX - canvas.offsetLeft) / 10);
+    const rowNumber = Math.floor((mouseEvent.clientY - canvas.offsetTop) / 10);
+    return [columnNumber, rowNumber];
 }
-canvas.addEventListener("mousedown", e => {
-    mouseDown = true;
-    const [x, y] = getPositionFromEvent(e);
-    drawing = !BOARD[x][y];
-    BOARD[x][y] = drawing;
+canvas.addEventListener("mousedown", mouseEvent => {
+    isMouseDown = true;
+    const [columnNumber, rowNumber] = getPositionFromEvent(mouseEvent);
+    isDrawing = !gameBoard[columnNumber][rowNumber];
+    gameBoard[columnNumber][rowNumber] = isDrawing;
     drawAll();
 });
-canvas.addEventListener("mousemove", e => {
-    if (!mouseDown) {
+canvas.addEventListener("mousemove", mouseEvent => {
+    if (!isMouseDown) {
         return;
     }
-    const [x, y] = getPositionFromEvent(e);
-    BOARD[x][y] = drawing;
+    const [columnNumber, rowNumber] = getPositionFromEvent(mouseEvent);
+    gameBoard[columnNumber][rowNumber] = isDrawing;
     drawAll();
 });
 canvas.addEventListener("mouseup", () => {
-    mouseDown = false;
+    isMouseDown = false;
 });
 const generateRandom = () => {
     const board = prepareBoard();
-    for (let i = 0; i < tiles_x; i++) {
-        for (let j = 0; j < tiles_y; j++) {
-            board[i][j] = Math.random() > 0.9;
+    for (let columnNumber = 0; columnNumber < columnsCount; columnNumber++) {
+        for (let rowNumber = 0; rowNumber < rowsCount; rowNumber++) {
+            board[columnNumber][rowNumber] = Math.random() > 0.9;
         }
     }
     return board;
 };
-document.addEventListener("keydown", e => {
-    console.log(e);
-    if (e.key === "p") {
-        paused = !paused;
+document.addEventListener("keydown", keyBoardEvent => {
+    console.log(keyBoardEvent);
+    if (keyBoardEvent.key === "p") {
+        isPaused = !isPaused;
     }
-    else if (e.key === "+") {
-        gameSpeed = Math.max(50, gameSpeed - 50);
+    else if (keyBoardEvent.key === "+") {
+        gameSpeedMsLoop = Math.max(50, gameSpeedMsLoop - 50);
     }
-    else if (e.key === "-") {
-        gameSpeed = Math.min(2000, gameSpeed + 50);
+    else if (keyBoardEvent.key === "-") {
+        gameSpeedMsLoop = Math.min(2000, gameSpeedMsLoop + 50);
     }
-    else if (e.key === "r") {
-        BOARD = generateRandom();
+    else if (keyBoardEvent.key === "r") {
+        gameBoard = generateRandom();
         drawAll();
     }
-    else if (e.key === "c") {
-        BOARD = prepareBoard();
+    else if (keyBoardEvent.key === "c") {
+        gameBoard = prepareBoard();
         drawAll();
     }
 });
 /* MODAL */
-const btn = document.querySelector("#help-btn");
-const modal = document.querySelector("#help-msg");
+const helpButton = document.querySelector("#help-btn");
+const helpModal = document.querySelector("#help-msg");
 const toggleModal = () => {
-    modal.classList.toggle("hidden");
+    helpModal.classList.toggle("hidden");
 };
-document.addEventListener("keydown", e => {
-    if (e.key === "?") {
+document.addEventListener("keydown", keyboardEvent => {
+    if (keyboardEvent.key === "?") {
         toggleModal();
     }
 });
-btn.addEventListener("click", toggleModal);
+helpButton.addEventListener("click", toggleModal);

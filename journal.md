@@ -11,3 +11,7 @@
 - Commented and dead code
 
 - Folder src
+
+## 2 - Name
+
+- Variables and arguments
