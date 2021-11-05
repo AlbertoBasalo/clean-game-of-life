@@ -17,3 +17,4 @@
 - Variables and arguments
 - Function names
 - Magic numbers and strings
+- comments
