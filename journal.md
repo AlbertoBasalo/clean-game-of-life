@@ -18,3 +18,8 @@
 - Function names
 - Magic numbers and strings
 - comments
+
+## 3 - Control
+
+- Nested <=2
+

@@ -34,6 +34,10 @@
         "maxEOF": 1
       }
     ],
+    "max-depth": [
+      "warn",
+      2
+    ],
     "no-magic-numbers": [
       "warn",
       {

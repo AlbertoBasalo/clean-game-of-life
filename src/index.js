@@ -59,12 +59,15 @@ const clearCanvas = () => {
 const drawBoard = (board) => {
     for (let columnNumber = 0; columnNumber < columnsCount; columnNumber++) {
         for (let rowNumber = 0; rowNumber < rowsCount; rowNumber++) {
-            if (!board[columnNumber][rowNumber]) {
-                continue;
-            }
-            context.fillRect(columnNumber * TILE_WITH, rowNumber * TILE_WITH, TILE_WITH, TILE_WITH);
+            drawCell(board, rowNumber, columnNumber);
         }
     }
+};
+const drawCell = (board, rowNumber, columnNumber) => {
+    if (!board[columnNumber][rowNumber]) {
+        return;
+    }
+    context.fillRect(columnNumber * TILE_WITH, rowNumber * TILE_WITH, TILE_WITH, TILE_WITH);
 };
 const isAlive = (columnNumber, rowNumber) => {
     if (columnNumber < 0 ||
@@ -84,30 +87,37 @@ const calculateNextGeneration = () => {
     const board = prepareBoard();
     for (let columnNumber = 0; columnNumber < columnsCount; columnNumber++) {
         for (let rowNumber = 0; rowNumber < rowsCount; rowNumber++) {
-            let countLiveNeighbors = 0;
-            for (const deltaRow of DELTAS) {
-                for (const deltaColumn of DELTAS) {
-                    if (!(deltaRow === 0 && deltaColumn === 0)) {
-                        if (isAlive(columnNumber + deltaColumn, rowNumber + deltaRow)) {
-                            countLiveNeighbors++;
-                        }
-                    }
-                }
-            }
-            if (!isAlive(columnNumber, rowNumber)) {
-                if (countLiveNeighbors === NEEDED_NEIGHBORS_TO_BORN) {
-                    board[columnNumber][rowNumber] = ALIVE;
-                }
-            }
-            else {
-                if (countLiveNeighbors == MINIMUM_NEIGHBORS_TO_KEEP_ALIVE ||
-                    countLiveNeighbors == MAXIMUM_NEIGHBORS_TO_KEEP_ALIVE) {
-                    board[columnNumber][rowNumber] = ALIVE;
-                }
-            }
+            calculateNextGenerationCell(board, rowNumber, columnNumber);
         }
     }
     return board;
+};
+const calculateNextGenerationCell = (board, rowNumber, columnNumber) => {
+    let countLiveNeighbors = 0;
+    for (const deltaRow of DELTAS) {
+        for (const deltaColumn of DELTAS) {
+            countLiveNeighbors = updateLiveNeighbors(deltaRow, deltaColumn, columnNumber, rowNumber, countLiveNeighbors);
+        }
+    }
+    if (!isAlive(columnNumber, rowNumber)) {
+        if (countLiveNeighbors === NEEDED_NEIGHBORS_TO_BORN) {
+            board[columnNumber][rowNumber] = ALIVE;
+        }
+    }
+    else {
+        if (countLiveNeighbors == MINIMUM_NEIGHBORS_TO_KEEP_ALIVE ||
+            countLiveNeighbors == MAXIMUM_NEIGHBORS_TO_KEEP_ALIVE) {
+            board[columnNumber][rowNumber] = ALIVE;
+        }
+    }
+};
+const updateLiveNeighbors = (deltaRow, deltaColumn, columnNumber, rowNumber, countLiveNeighbors) => {
+    if (!(deltaRow === 0 && deltaColumn === 0)) {
+        if (isAlive(columnNumber + deltaColumn, rowNumber + deltaRow)) {
+            countLiveNeighbors++;
+        }
+    }
+    return countLiveNeighbors;
 };
 const redraw = () => {
     clearCanvas();
