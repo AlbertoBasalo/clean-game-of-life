@@ -23,3 +23,4 @@
 
 - Nested <=2
 - Conditions (simplest and positive)
+- Complexity (switches, ifs, responsibilities...)

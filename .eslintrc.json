@@ -38,6 +38,12 @@
       "warn",
       2
     ],
+    "complexity": [
+      "warn",
+      {
+        "max": 5
+      }
+    ],
     "no-magic-numbers": [
       "warn",
       {

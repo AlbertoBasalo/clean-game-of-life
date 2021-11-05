@@ -132,6 +132,15 @@ const calculateNextGenerationCell = (
       );
     }
   }
+  setNewGenerationCellState(board, rowNumber, columnNumber, countLiveNeighbors);
+};
+
+const setNewGenerationCellState = (
+  board: boolean[][],
+  rowNumber: number,
+  columnNumber: number,
+  countLiveNeighbors: number
+) => {
   if (isAlive(columnNumber, rowNumber)) {
     if (canKeepAlive(countLiveNeighbors)) {
       board[columnNumber][rowNumber] = ALIVE;
@@ -240,27 +249,37 @@ const generateRandom = () => {
 
 document.addEventListener("keydown", keyBoardEvent => {
   console.log(keyBoardEvent);
+  const keyPressed = keyBoardEvent.key;
+  if (Object.keys(keyActions).includes(keyPressed)) {
+    keyActions[keyPressed]();
+  }
+});
 
-  if (keyBoardEvent.key === PAUSE_KEY) {
+const keyActions = {
+  [PAUSE_KEY]: () => {
     isPaused = !isPaused;
-  } else if (keyBoardEvent.key === INCREASE_KEY) {
+  },
+  [INCREASE_KEY]: () => {
     gameSpeedLoopMs = Math.max(
       MAXIMUM_SPEED_GAME_LOOP_MS,
       gameSpeedLoopMs - DELTA_SPEED_GAME_MS
     );
-  } else if (keyBoardEvent.key === DECREASE_KEY) {
+  },
+  [DECREASE_KEY]: () => {
     gameSpeedLoopMs = Math.min(
       MINIMUM_SPEED_GAME_LOOP_MS,
       gameSpeedLoopMs + DELTA_SPEED_GAME_MS
     );
-  } else if (keyBoardEvent.key === RANDOM_KEY) {
+  },
+  [RANDOM_KEY]: () => {
     gameBoard = generateRandom();
     redraw();
-  } else if (keyBoardEvent.key === CLEAR_KEY) {
+  },
+  [CLEAR_KEY]: () => {
     gameBoard = prepareBoard();
     redraw();
-  }
-});
+  },
+};
 
 /* Help button and modal */
 const helpButton = document.querySelector(HELP_BUTTON_ID);

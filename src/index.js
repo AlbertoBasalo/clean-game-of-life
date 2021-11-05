@@ -108,6 +108,9 @@ const calculateNextGenerationCell = (board, rowNumber, columnNumber) => {
             countLiveNeighbors = updateLiveNeighbors(deltaRow, deltaColumn, columnNumber, rowNumber, countLiveNeighbors);
         }
     }
+    setNewGenerationCellState(board, rowNumber, columnNumber, countLiveNeighbors);
+};
+const setNewGenerationCellState = (board, rowNumber, columnNumber, countLiveNeighbors) => {
     if (isAlive(columnNumber, rowNumber)) {
         if (canKeepAlive(countLiveNeighbors)) {
             board[columnNumber][rowNumber] = ALIVE;
@@ -190,24 +193,30 @@ const generateRandom = () => {
 };
 document.addEventListener("keydown", keyBoardEvent => {
     console.log(keyBoardEvent);
-    if (keyBoardEvent.key === PAUSE_KEY) {
-        isPaused = !isPaused;
-    }
-    else if (keyBoardEvent.key === INCREASE_KEY) {
-        gameSpeedLoopMs = Math.max(MAXIMUM_SPEED_GAME_LOOP_MS, gameSpeedLoopMs - DELTA_SPEED_GAME_MS);
-    }
-    else if (keyBoardEvent.key === DECREASE_KEY) {
-        gameSpeedLoopMs = Math.min(MINIMUM_SPEED_GAME_LOOP_MS, gameSpeedLoopMs + DELTA_SPEED_GAME_MS);
-    }
-    else if (keyBoardEvent.key === RANDOM_KEY) {
-        gameBoard = generateRandom();
-        redraw();
-    }
-    else if (keyBoardEvent.key === CLEAR_KEY) {
-        gameBoard = prepareBoard();
-        redraw();
+    const keyPressed = keyBoardEvent.key;
+    if (Object.keys(keyActions).includes(keyPressed)) {
+        keyActions[keyPressed]();
     }
 });
+const keyActions = {
+    [PAUSE_KEY]: () => {
+        isPaused = !isPaused;
+    },
+    [INCREASE_KEY]: () => {
+        gameSpeedLoopMs = Math.max(MAXIMUM_SPEED_GAME_LOOP_MS, gameSpeedLoopMs - DELTA_SPEED_GAME_MS);
+    },
+    [DECREASE_KEY]: () => {
+        gameSpeedLoopMs = Math.min(MINIMUM_SPEED_GAME_LOOP_MS, gameSpeedLoopMs + DELTA_SPEED_GAME_MS);
+    },
+    [RANDOM_KEY]: () => {
+        gameBoard = generateRandom();
+        redraw();
+    },
+    [CLEAR_KEY]: () => {
+        gameBoard = prepareBoard();
+        redraw();
+    },
+};
 /* Help button and modal */
 const helpButton = document.querySelector(HELP_BUTTON_ID);
 const helpModal = document.querySelector(HELP_MODAL_ID);
