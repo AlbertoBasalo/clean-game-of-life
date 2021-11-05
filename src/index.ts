@@ -64,41 +64,39 @@ const clearCanvas = () => {
   context.clearRect(0, 0, width, height);
 };
 
-const drawBoard = (board: boolean[][]) => {
+const drawBoard = () => {
   for (let columnNumber = 0; columnNumber < columnsCount; columnNumber++) {
     for (let rowNumber = 0; rowNumber < rowsCount; rowNumber++) {
-      drawCell(board, rowNumber, columnNumber);
+      drawCell(rowNumber, columnNumber);
     }
   }
 };
 
-const drawCell = (
-  board: boolean[][],
-  rowNumber: number,
-  columnNumber: number
-) => {
-  if (!board[columnNumber][rowNumber]) {
-    return;
+const isAlive = (columnNumber: number, rowNumber: number): boolean => {
+  if (isInsideBoard(columnNumber, rowNumber)) {
+    return gameBoard[columnNumber][rowNumber];
+  } else {
+    return false;
   }
-  context.fillRect(
-    columnNumber * TILE_WITH,
-    rowNumber * TILE_WITH,
-    TILE_WITH,
-    TILE_WITH
-  );
 };
 
-const isAlive = (columnNumber: number, rowNumber: number): boolean => {
-  if (
-    columnNumber < 0 ||
-    columnNumber >= columnsCount ||
-    rowNumber < 0 ||
-    rowNumber >= rowsCount
-  ) {
-    return DEAD;
-  }
+const isInsideBoard = (columnNumber: number, rowNumber: number): boolean => {
+  if (columnNumber < 0) return false;
+  if (columnNumber >= columnsCount) return false;
+  if (rowNumber < 0) return false;
+  if (rowNumber >= rowsCount) return false;
+  return true;
+};
 
-  return gameBoard[columnNumber][rowNumber];
+const drawCell = (rowNumber: number, columnNumber: number) => {
+  if (isAlive(columnNumber, rowNumber)) {
+    context.fillRect(
+      columnNumber * TILE_WITH,
+      rowNumber * TILE_WITH,
+      TILE_WITH,
+      TILE_WITH
+    );
+  }
 };
 
 gameBoard[1][0] = ALIVE;
@@ -134,18 +132,25 @@ const calculateNextGenerationCell = (
       );
     }
   }
-  if (!isAlive(columnNumber, rowNumber)) {
-    if (countLiveNeighbors === NEEDED_NEIGHBORS_TO_BORN) {
+  if (isAlive(columnNumber, rowNumber)) {
+    if (canKeepAlive(countLiveNeighbors)) {
       board[columnNumber][rowNumber] = ALIVE;
     }
   } else {
-    if (
-      countLiveNeighbors == MINIMUM_NEIGHBORS_TO_KEEP_ALIVE ||
-      countLiveNeighbors == MAXIMUM_NEIGHBORS_TO_KEEP_ALIVE
-    ) {
+    if (canBorn(countLiveNeighbors)) {
       board[columnNumber][rowNumber] = ALIVE;
     }
   }
+};
+
+const canKeepAlive = (countLiveNeighbors: number) => {
+  return (
+    countLiveNeighbors == MINIMUM_NEIGHBORS_TO_KEEP_ALIVE ||
+    countLiveNeighbors == MAXIMUM_NEIGHBORS_TO_KEEP_ALIVE
+  );
+};
+const canBorn = (countLiveNeighbors: number) => {
+  return countLiveNeighbors == NEEDED_NEIGHBORS_TO_BORN;
 };
 
 const updateLiveNeighbors = (
@@ -155,7 +160,7 @@ const updateLiveNeighbors = (
   rowNumber: number,
   countLiveNeighbors: number
 ) => {
-  if (!(deltaRow === 0 && deltaColumn === 0)) {
+  if (isMyNeighbor(deltaRow, deltaColumn)) {
     if (isAlive(columnNumber + deltaColumn, rowNumber + deltaRow)) {
       countLiveNeighbors++;
     }
@@ -163,9 +168,13 @@ const updateLiveNeighbors = (
   return countLiveNeighbors;
 };
 
+const isMyNeighbor = (deltaRow: number, deltaColumn: number) => {
+  return (deltaRow === 0 && deltaColumn === 0) === false;
+};
+
 const redraw = () => {
   clearCanvas();
-  drawBoard(gameBoard);
+  drawBoard();
 };
 
 const drawNextGeneration = () => {
@@ -206,12 +215,11 @@ canvas.addEventListener("mousedown", mouseEvent => {
 });
 
 canvas.addEventListener("mousemove", mouseEvent => {
-  if (!isMouseDown) {
-    return;
+  if (isMouseDown) {
+    const [columnNumber, rowNumber] = getPositionFromMouseEvent(mouseEvent);
+    gameBoard[columnNumber][rowNumber] = isDrawing;
+    redraw();
   }
-  const [columnNumber, rowNumber] = getPositionFromMouseEvent(mouseEvent);
-  gameBoard[columnNumber][rowNumber] = isDrawing;
-  redraw();
 });
 
 canvas.addEventListener("mouseup", () => {
