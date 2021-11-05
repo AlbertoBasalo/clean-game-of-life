@@ -12,12 +12,13 @@ const CONTEXT_CONFIG = {
 const INITIAL_SPEED_LOOP_MS = 1000;
 const MINIMUM_NEIGHBORS_TO_KEEP_ALIVE = 2;
 const MAXIMUM_NEIGHBORS_TO_KEEP_ALIVE = 3;
-const NEIGHBORS_TO_BORN = 3;
+const NEEDED_NEIGHBORS_TO_BORN = 3;
 const ALIVE = true;
 const DEAD = false;
+const DELTAS = [-1, 0, 1];
 const LIVING_CHANCE = 0.9;
-const MINIMUM_SPEED_GAME_MS = 50;
-const MAXIMUM_SPEED_GAME_MS = 2000;
+const MAXIMUM_SPEED_GAME_LOOP_MS = 50;
+const MINIMUM_SPEED_GAME_LOOP_MS = 2000;
 const DELTA_SPEED_GAME_MS = 50;
 const HELP_BUTTON_ID = "#help-btn";
 const HELP_MODAL_ID = "#help-msg";
@@ -30,6 +31,7 @@ const HELP_KEY = "?";
 
 const canvas = document.querySelector<HTMLCanvasElement>(CANVAS_ID);
 const context = canvas.getContext(CONTEXT_TYPE);
+// To Do: remove redundant width and height variables, and use canvas.width and canvas.height
 const width = window.innerWidth;
 const height = window.innerHeight;
 const columnsCount = Math.floor(width / TILE_WITH);
@@ -78,17 +80,17 @@ const drawBoard = (board: boolean[][]) => {
   }
 };
 
-const isAlive = (columnNumber: number, rowNumber: number): number => {
+const isAlive = (columnNumber: number, rowNumber: number): boolean => {
   if (
     columnNumber < 0 ||
     columnNumber >= columnsCount ||
     rowNumber < 0 ||
     rowNumber >= rowsCount
   ) {
-    return 0;
+    return DEAD;
   }
 
-  return gameBoard[columnNumber][rowNumber] ? 1 : 0;
+  return gameBoard[columnNumber][rowNumber];
 };
 
 gameBoard[1][0] = ALIVE;
@@ -102,18 +104,17 @@ const calculateNextGeneration = () => {
   for (let columnNumber = 0; columnNumber < columnsCount; columnNumber++) {
     for (let rowNumber = 0; rowNumber < rowsCount; rowNumber++) {
       let countLiveNeighbors = 0;
-      for (const deltaRow of [-1, 0, 1]) {
-        for (const deltaColumn of [-1, 0, 1]) {
+      for (const deltaRow of DELTAS) {
+        for (const deltaColumn of DELTAS) {
           if (!(deltaRow === 0 && deltaColumn === 0)) {
-            countLiveNeighbors += isAlive(
-              columnNumber + deltaRow,
-              rowNumber + deltaColumn
-            );
+            if (isAlive(columnNumber + deltaColumn, rowNumber + deltaRow)) {
+              countLiveNeighbors++;
+            }
           }
         }
       }
       if (!isAlive(columnNumber, rowNumber)) {
-        if (countLiveNeighbors === NEIGHBORS_TO_BORN) {
+        if (countLiveNeighbors === NEEDED_NEIGHBORS_TO_BORN) {
           board[columnNumber][rowNumber] = ALIVE;
         }
       } else {
@@ -149,6 +150,7 @@ const nextGenLoop = () => {
 
 nextGenLoop();
 
+/* Canvas user interaction */
 let isDrawing = true;
 let isMouseDown = false;
 
@@ -183,6 +185,8 @@ canvas.addEventListener("mouseup", () => {
   isMouseDown = false;
 });
 
+/** Menu listeners */
+
 const generateRandom = () => {
   const board = prepareBoard();
   for (let columnNumber = 0; columnNumber < columnsCount; columnNumber++) {
@@ -200,12 +204,12 @@ document.addEventListener("keydown", keyBoardEvent => {
     isPaused = !isPaused;
   } else if (keyBoardEvent.key === INCREASE_KEY) {
     gameSpeedLoopMs = Math.max(
-      MINIMUM_SPEED_GAME_MS,
+      MAXIMUM_SPEED_GAME_LOOP_MS,
       gameSpeedLoopMs - DELTA_SPEED_GAME_MS
     );
   } else if (keyBoardEvent.key === DECREASE_KEY) {
     gameSpeedLoopMs = Math.min(
-      MAXIMUM_SPEED_GAME_MS,
+      MINIMUM_SPEED_GAME_LOOP_MS,
       gameSpeedLoopMs + DELTA_SPEED_GAME_MS
     );
   } else if (keyBoardEvent.key === RANDOM_KEY) {
@@ -217,7 +221,7 @@ document.addEventListener("keydown", keyBoardEvent => {
   }
 });
 
-/* MODAL */
+/* Help button and modal */
 const helpButton = document.querySelector(HELP_BUTTON_ID);
 const helpModal = document.querySelector(HELP_MODAL_ID);
 
