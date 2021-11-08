@@ -13,7 +13,7 @@
   },
   "scripts": {
     "build": "tsc",
-    "watch": "tsc -w",
+    "start": "tsc -w",
     "format": "prettier --write \"./**/*.{ts,json}\"",
     "lint": "eslint src --ext .ts --fix"
   },
