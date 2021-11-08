@@ -1,8 +1,5 @@
 {
-  "name": "game-of-life-1",
+  "name": "game-of-life",
   "version": "0.0.0",
-  "private": true,
-  "dependencies": {
-    "typescript": "^4.4.4"
-  }
+  "private": false
 }
