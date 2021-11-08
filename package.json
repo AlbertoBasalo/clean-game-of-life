@@ -1,19 +1,19 @@
 {
-"name": "clean-game-of-life",
-"version": "1.0.0",
-"description": "Game of life implementation used as a sample for clean code courses",
-"author": {
-  "name": "Alberto Basalo",
-  "email": "albertobasalo@hotmail.com",
-  "url": "https://twitter.com/albertobasalo"
-},
-"private": false,
+  "name": "clean-game-of-life",
+  "version": "1.0.0",
+  "description": "Game of life implementation used as a sample for clean code courses",
+  "author": {
+    "name": "Alberto Basalo",
+    "email": "albertobasalo@hotmail.com",
+    "url": "https://twitter.com/albertobasalo"
+  },
+  "private": false,
   "dependencies": {
     "typescript": "^4.4.4"
   },
   "scripts": {
     "build": "tsc",
-    "watch": "tsc -w",
+    "start": "tsc -w",
     "format": "prettier --write \"./**/*.{ts,json}\"",
     "lint": "eslint src --ext .ts --fix"
   },
