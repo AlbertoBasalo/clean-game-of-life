@@ -1,5 +1,5 @@
 {
-  "name": "game-of-life",
+  "name": "clean-game-of-life",
   "version": "0.0.0",
   "description": "Game of life implementation used as a sample for clean code courses",
   "author": {
