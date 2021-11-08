@@ -1,5 +1,11 @@
 {
   "name": "game-of-life",
   "version": "0.0.0",
+  "description": "Game of life implementation used as a sample for clean code courses",
+  "author": {
+    "name": "Alberto Basalo",
+    "email": "albertobasalo@hotmail.com",
+    "url": "https://twitter.com/albertobasalo"
+  },
   "private": false
 }
