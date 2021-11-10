@@ -3,7 +3,7 @@
 // https://medium.com/hypersphere-codes/conways-game-of-life-in-typescript-a955aec3bd49
 const CANVAS_ID = "#game";
 const CONTEXT_TYPE = "2d";
-const TILE_WITH = 10;
+const TILE_LENGTH = 10;
 const CONTEXT_CONFIG = {
   fillStyle: "#f73454",
   strokeStyle: "#f73454",
@@ -34,8 +34,9 @@ const context = canvas.getContext(CONTEXT_TYPE);
 // To Do: remove redundant width and height variables, and use canvas.width and canvas.height
 const width = window.innerWidth;
 const height = window.innerHeight;
-const columnsCount = Math.floor(width / TILE_WITH);
-const rowsCount = Math.floor(height / TILE_WITH);
+const columnsCount = Math.floor(width / TILE_LENGTH);
+const rowsCount = Math.floor(height / TILE_LENGTH);
+
 canvas.width = width;
 canvas.height = height;
 
@@ -67,12 +68,14 @@ const clearCanvas = () => {
 const drawBoard = () => {
   for (let columnNumber = 0; columnNumber < columnsCount; columnNumber++) {
     for (let rowNumber = 0; rowNumber < rowsCount; rowNumber++) {
+      // ✅ Move nested structures to a new function
       drawCell(rowNumber, columnNumber);
     }
   }
 };
 
 const isAlive = (columnNumber: number, rowNumber: number): boolean => {
+  // ✅ Move complex conditionals to a new function
   if (isInsideBoard(columnNumber, rowNumber)) {
     return gameBoard[columnNumber][rowNumber];
   } else {
@@ -81,6 +84,7 @@ const isAlive = (columnNumber: number, rowNumber: number): boolean => {
 };
 
 const isInsideBoard = (columnNumber: number, rowNumber: number): boolean => {
+  // ✅ Separate each condition to conditional instruction
   if (columnNumber < 0) return false;
   if (columnNumber >= columnsCount) return false;
   if (rowNumber < 0) return false;
@@ -91,10 +95,10 @@ const isInsideBoard = (columnNumber: number, rowNumber: number): boolean => {
 const drawCell = (rowNumber: number, columnNumber: number) => {
   if (isAlive(columnNumber, rowNumber)) {
     context.fillRect(
-      columnNumber * TILE_WITH,
-      rowNumber * TILE_WITH,
-      TILE_WITH,
-      TILE_WITH
+      columnNumber * TILE_LENGTH,
+      rowNumber * TILE_LENGTH,
+      TILE_LENGTH,
+      TILE_LENGTH
     );
   }
 };
@@ -109,6 +113,7 @@ const calculateNextGeneration = () => {
   const board = prepareBoard();
   for (let columnNumber = 0; columnNumber < columnsCount; columnNumber++) {
     for (let rowNumber = 0; rowNumber < rowsCount; rowNumber++) {
+      // ✅ Move nested structures to a new function
       calculateNextGenerationCell(board, rowNumber, columnNumber);
     }
   }
@@ -120,45 +125,54 @@ const calculateNextGenerationCell = (
   rowNumber: number,
   columnNumber: number
 ) => {
-  let countLiveNeighbors = 0;
+  let numberOfLivingNeighbors = 0;
   for (const deltaRow of DELTAS) {
     for (const deltaColumn of DELTAS) {
-      countLiveNeighbors = updateLiveNeighbors(
+      // ✅ Move nested structures to a new function
+      numberOfLivingNeighbors = updateLiveNeighbors(
         deltaRow,
         deltaColumn,
         columnNumber,
         rowNumber,
-        countLiveNeighbors
+        numberOfLivingNeighbors
       );
     }
   }
-  setNewGenerationCellState(board, rowNumber, columnNumber, countLiveNeighbors);
+  // ✅ Reduce complexity by moving logic to a new function
+  setNewGenerationCellState(
+    board,
+    rowNumber,
+    columnNumber,
+    numberOfLivingNeighbors
+  );
 };
 
 const setNewGenerationCellState = (
   board: boolean[][],
   rowNumber: number,
   columnNumber: number,
-  countLiveNeighbors: number
+  numberOfLivingNeighbors: number
 ) => {
+  // Fair enough, but it's not the best way to do it
   if (isAlive(columnNumber, rowNumber)) {
-    if (canKeepAlive(countLiveNeighbors)) {
+    if (canKeepAlive(numberOfLivingNeighbors)) {
       board[columnNumber][rowNumber] = ALIVE;
     }
   } else {
-    if (canBorn(countLiveNeighbors)) {
+    if (canBorn(numberOfLivingNeighbors)) {
       board[columnNumber][rowNumber] = ALIVE;
     }
   }
 };
 
-const canKeepAlive = (countLiveNeighbors: number) => {
-  return (
-    countLiveNeighbors == MINIMUM_NEIGHBORS_TO_KEEP_ALIVE ||
-    countLiveNeighbors == MAXIMUM_NEIGHBORS_TO_KEEP_ALIVE
-  );
+const canKeepAlive = (numberOfLivingNeighbors: number) => {
+  // ✅ Remember that each condition is a business rule
+  const isMinimum = numberOfLivingNeighbors == MINIMUM_NEIGHBORS_TO_KEEP_ALIVE;
+  const isMaximum = numberOfLivingNeighbors == MAXIMUM_NEIGHBORS_TO_KEEP_ALIVE;
+  return isMinimum || isMaximum;
 };
 const canBorn = (countLiveNeighbors: number) => {
+  // ✅ But keep it simple
   return countLiveNeighbors == NEEDED_NEIGHBORS_TO_BORN;
 };
 
@@ -169,7 +183,8 @@ const updateLiveNeighbors = (
   rowNumber: number,
   countLiveNeighbors: number
 ) => {
-  if (isMyNeighbor(deltaRow, deltaColumn)) {
+  // Fair enough, but it's not the best way to do it
+  if (isNotMe(deltaRow, deltaColumn)) {
     if (isAlive(columnNumber + deltaColumn, rowNumber + deltaRow)) {
       countLiveNeighbors++;
     }
@@ -177,11 +192,13 @@ const updateLiveNeighbors = (
   return countLiveNeighbors;
 };
 
-const isMyNeighbor = (deltaRow: number, deltaColumn: number) => {
-  return (deltaRow === 0 && deltaColumn === 0) === false;
+const isNotMe = (deltaRow: number, deltaColumn: number) => {
+  const hasHorizontalDelta = deltaRow !== 0;
+  const hasVerticalDelta = deltaColumn !== 0;
+  return hasHorizontalDelta || hasVerticalDelta;
 };
 
-const redraw = () => {
+const redrawGameCanvas = () => {
   clearCanvas();
   drawBoard();
 };
@@ -191,7 +208,7 @@ const drawNextGeneration = () => {
     return;
   }
   gameBoard = calculateNextGeneration();
-  redraw();
+  redrawGameCanvas();
 };
 
 const nextGenLoop = () => {
@@ -202,32 +219,46 @@ const nextGenLoop = () => {
 nextGenLoop();
 
 /* Canvas user interaction */
-let isDrawing = true;
+let currentMouseState = ALIVE;
 let isMouseDown = false;
 
 function getPositionFromMouseEvent(mouseEvent: MouseEvent) {
-  const columnNumber = Math.floor(
-    (mouseEvent.clientX - canvas.offsetLeft) / TILE_WITH
-  );
-  const rowNumber = Math.floor(
-    (mouseEvent.clientY - canvas.offsetTop) / TILE_WITH
-  );
+  // ✅ Divide and conquer
+  const horizontalPixel = getHorizontalPixelFromMouseEvent(mouseEvent);
+  const columnNumber = getTileNumberFromPixel(horizontalPixel);
+  const verticalPixel = getVerticalPixelFromMouseEvent(mouseEvent);
+  const rowNumber = getTileNumberFromPixel(verticalPixel);
   return [columnNumber, rowNumber];
+}
+function getHorizontalPixelFromMouseEvent(mouseEvent: MouseEvent) {
+  return mouseEvent.clientX - canvas.offsetLeft;
+}
+function getVerticalPixelFromMouseEvent(mouseEvent: MouseEvent) {
+  return mouseEvent.clientY - canvas.offsetTop;
+}
+function getTileNumberFromPixel(pixel: number) {
+  return Math.floor(pixel / TILE_LENGTH);
 }
 
 canvas.addEventListener("mousedown", mouseEvent => {
   isMouseDown = true;
   const [columnNumber, rowNumber] = getPositionFromMouseEvent(mouseEvent);
-  isDrawing = !gameBoard[columnNumber][rowNumber];
-  gameBoard[columnNumber][rowNumber] = isDrawing;
-  redraw();
+  // ⚠️ the variable isDrawing got a very bad name
+  // isDrawing = !gameBoard[columnNumber][rowNumber];
+  const stateAtMousePosition = gameBoard[columnNumber][rowNumber];
+  // Toggle state
+  const newToggledState = !stateAtMousePosition;
+  gameBoard[columnNumber][rowNumber] = newToggledState;
+  currentMouseState = newToggledState;
+  redrawGameCanvas();
 });
 
 canvas.addEventListener("mousemove", mouseEvent => {
   if (isMouseDown) {
     const [columnNumber, rowNumber] = getPositionFromMouseEvent(mouseEvent);
-    gameBoard[columnNumber][rowNumber] = isDrawing;
-    redraw();
+    // ⚠️ the variable isDrawing got a very bad name
+    gameBoard[columnNumber][rowNumber] = currentMouseState;
+    redrawGameCanvas();
   }
 });
 
@@ -241,7 +272,9 @@ const generateRandom = () => {
   const board = prepareBoard();
   for (let columnNumber = 0; columnNumber < columnsCount; columnNumber++) {
     for (let rowNumber = 0; rowNumber < rowsCount; rowNumber++) {
-      board[columnNumber][rowNumber] = Math.random() > LIVING_CHANCE;
+      // ✅ Each operation on its own instruction
+      const isRandomlyAlive = Math.random() > LIVING_CHANCE;
+      board[columnNumber][rowNumber] = isRandomlyAlive;
     }
   }
   return board;
@@ -250,11 +283,16 @@ const generateRandom = () => {
 document.addEventListener("keydown", keyBoardEvent => {
   console.log(keyBoardEvent);
   const keyPressed = keyBoardEvent.key;
-  if (Object.keys(keyActions).includes(keyPressed)) {
-    keyActions[keyPressed]();
+  // ✅ Use an object or a dictionary instead os a switch or nested ifs
+  const allowedKeys = Object.keys(keyActions);
+  if (allowedKeys.includes(keyPressed)) {
+    // ✅ get and invoke function
+    const action = keyActions[keyPressed];
+    action();
   }
 });
 
+// ✅ A dictionary object with values or functions (as in this case)
 const keyActions = {
   [PAUSE_KEY]: () => {
     isPaused = !isPaused;
@@ -273,11 +311,11 @@ const keyActions = {
   },
   [RANDOM_KEY]: () => {
     gameBoard = generateRandom();
-    redraw();
+    redrawGameCanvas();
   },
   [CLEAR_KEY]: () => {
     gameBoard = prepareBoard();
-    redraw();
+    redrawGameCanvas();
   },
 };
 
