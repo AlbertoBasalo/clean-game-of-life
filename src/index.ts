@@ -1,9 +1,13 @@
 /* eslint-disable max-lines */
 
 // https://medium.com/hypersphere-codes/conways-game-of-life-in-typescript-a955aec3bd49
+
+// ✅ Constant section at the beginning
+// No magic numbers
+// Screaming uppercase
 const CANVAS_ID = "#game";
 const CONTEXT_TYPE = "2d";
-const TILE_WITH = 10;
+const TILE_LENGTH = 10;
 const CONTEXT_CONFIG = {
   fillStyle: "#f73454",
   strokeStyle: "#f73454",
@@ -29,13 +33,18 @@ const RANDOM_KEY = "r";
 const CLEAR_KEY = "c";
 const HELP_KEY = "?";
 
+// ✅ Variables (immutables) section
 const canvas = document.querySelector<HTMLCanvasElement>(CANVAS_ID);
 const context = canvas.getContext(CONTEXT_TYPE);
+// ✅ Comments: some are necessary, some are not
 // To Do: remove redundant width and height variables, and use canvas.width and canvas.height
 const width = window.innerWidth;
 const height = window.innerHeight;
-const columnsCount = Math.floor(width / TILE_WITH);
-const rowsCount = Math.floor(height / TILE_WITH);
+const columnsCount = Math.floor(width / TILE_LENGTH);
+const rowsCount = Math.floor(height / TILE_LENGTH);
+
+// ✅ ONE blank line allow to keep the code readable
+
 canvas.width = width;
 canvas.height = height;
 
@@ -43,10 +52,11 @@ context.fillStyle = CONTEXT_CONFIG.fillStyle;
 context.strokeStyle = CONTEXT_CONFIG.strokeStyle;
 context.lineWidth = CONTEXT_CONFIG.lineWidth;
 
-let isPaused = false;
-let gameSpeedLoopMs = INITIAL_SPEED_LOOP_MS;
+let isPaused = false; // ✅ Boolean variables start with a verb
+let gameSpeedLoopMs = INITIAL_SPEED_LOOP_MS; // ✅ Measure variables contains the unit of measure
 
 const prepareBoard = (): boolean[][] => {
+  // ✅ Always use full names for variables
   const board = [];
   for (let columnNumber = 0; columnNumber < columnsCount; columnNumber++) {
     const row = [];
@@ -60,6 +70,7 @@ const prepareBoard = (): boolean[][] => {
 
 let gameBoard = prepareBoard();
 
+// ✅ Always use verb and name for functions
 const clearCanvas = () => {
   context.clearRect(0, 0, width, height);
 };
@@ -71,15 +82,16 @@ const drawBoard = (board: boolean[][]) => {
         continue;
       }
       context.fillRect(
-        columnNumber * TILE_WITH,
-        rowNumber * TILE_WITH,
-        TILE_WITH,
-        TILE_WITH
+        columnNumber * TILE_LENGTH,
+        rowNumber * TILE_LENGTH,
+        TILE_LENGTH,
+        TILE_LENGTH
       );
     }
   }
 };
 
+// ✅ Boolean functions start with a verb like: is, has, can, must or should
 const isAlive = (columnNumber: number, rowNumber: number): boolean => {
   if (
     columnNumber < 0 ||
@@ -130,7 +142,8 @@ const calculateNextGeneration = () => {
   return board;
 };
 
-const redraw = () => {
+// ✅ Use names that describe the function
+const redrawGameCanvas = () => {
   clearCanvas();
   drawBoard(gameBoard);
 };
@@ -140,7 +153,7 @@ const drawNextGeneration = () => {
     return;
   }
   gameBoard = calculateNextGeneration();
-  redraw();
+  redrawGameCanvas();
 };
 
 const nextGenLoop = () => {
@@ -150,16 +163,18 @@ const nextGenLoop = () => {
 
 nextGenLoop();
 
+// ✅ Those comment are a code smell... but right now they help to understand the code
+
 /* Canvas user interaction */
 let isDrawing = true;
 let isMouseDown = false;
-
+// ✅ Use well named arguments for functions
 function getPositionFromMouseEvent(mouseEvent: MouseEvent) {
   const columnNumber = Math.floor(
-    (mouseEvent.clientX - canvas.offsetLeft) / TILE_WITH
+    (mouseEvent.clientX - canvas.offsetLeft) / TILE_LENGTH
   );
   const rowNumber = Math.floor(
-    (mouseEvent.clientY - canvas.offsetTop) / TILE_WITH
+    (mouseEvent.clientY - canvas.offsetTop) / TILE_LENGTH
   );
   return [columnNumber, rowNumber];
 }
@@ -169,7 +184,7 @@ canvas.addEventListener("mousedown", mouseEvent => {
   const [columnNumber, rowNumber] = getPositionFromMouseEvent(mouseEvent);
   isDrawing = !gameBoard[columnNumber][rowNumber];
   gameBoard[columnNumber][rowNumber] = isDrawing;
-  redraw();
+  redrawGameCanvas();
 });
 
 canvas.addEventListener("mousemove", mouseEvent => {
@@ -178,7 +193,7 @@ canvas.addEventListener("mousemove", mouseEvent => {
   }
   const [columnNumber, rowNumber] = getPositionFromMouseEvent(mouseEvent);
   gameBoard[columnNumber][rowNumber] = isDrawing;
-  redraw();
+  redrawGameCanvas();
 });
 
 canvas.addEventListener("mouseup", () => {
@@ -214,10 +229,10 @@ document.addEventListener("keydown", keyBoardEvent => {
     );
   } else if (keyBoardEvent.key === RANDOM_KEY) {
     gameBoard = generateRandom();
-    redraw();
+    redrawGameCanvas();
   } else if (keyBoardEvent.key === CLEAR_KEY) {
     gameBoard = prepareBoard();
-    redraw();
+    redrawGameCanvas();
   }
 });
 
