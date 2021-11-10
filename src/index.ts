@@ -115,24 +115,25 @@ const calculateNextGeneration = () => {
   const board = prepareBoard();
   for (let columnNumber = 0; columnNumber < columnsCount; columnNumber++) {
     for (let rowNumber = 0; rowNumber < rowsCount; rowNumber++) {
-      let countLiveNeighbors = 0;
+      // ✅ The more expressive the best
+      let numberOfLivingNeighbors = 0;
       for (const deltaRow of DELTAS) {
         for (const deltaColumn of DELTAS) {
           if (!(deltaRow === 0 && deltaColumn === 0)) {
             if (isAlive(columnNumber + deltaColumn, rowNumber + deltaRow)) {
-              countLiveNeighbors++;
+              numberOfLivingNeighbors++;
             }
           }
         }
       }
       if (!isAlive(columnNumber, rowNumber)) {
-        if (countLiveNeighbors === NEEDED_NEIGHBORS_TO_BORN) {
+        if (numberOfLivingNeighbors === NEEDED_NEIGHBORS_TO_BORN) {
           board[columnNumber][rowNumber] = ALIVE;
         }
       } else {
         if (
-          countLiveNeighbors == MINIMUM_NEIGHBORS_TO_KEEP_ALIVE ||
-          countLiveNeighbors == MAXIMUM_NEIGHBORS_TO_KEEP_ALIVE
+          numberOfLivingNeighbors == MINIMUM_NEIGHBORS_TO_KEEP_ALIVE ||
+          numberOfLivingNeighbors == MAXIMUM_NEIGHBORS_TO_KEEP_ALIVE
         ) {
           board[columnNumber][rowNumber] = ALIVE;
         }
