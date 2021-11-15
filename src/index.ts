@@ -165,6 +165,8 @@ const setNewGenerationCellState = (
   }
 };
 
+// ✅ A lot of new small functions with names expressing their purpose
+
 const canKeepAlive = (numberOfLivingNeighbors: number) => {
   // ✅ Remember that each condition is a business rule
   const isMinimum = numberOfLivingNeighbors == MINIMUM_NEIGHBORS_TO_KEEP_ALIVE;
