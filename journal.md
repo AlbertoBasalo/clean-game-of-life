@@ -24,3 +24,12 @@
 - Nested <=2
 - Conditions (simplest and positive)
 - Complexity (switches, ifs, responsibilities...)
+
+## 4 - Function
+
+- Try to not use global variables
+- Do not change global variables
+- Do not change your arguments
+- Enclose every instruction in a initializing function
+- Do not use fat arrow for first class functions
+- Homogenize event handlers

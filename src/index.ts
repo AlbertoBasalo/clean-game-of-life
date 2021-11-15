@@ -1,5 +1,9 @@
 /* eslint-disable max-lines */
 
+// 🚧 Reduce complexity
+// 🚧 Use functional programming style
+// 🚧 No global variables
+
 // https://medium.com/hypersphere-codes/conways-game-of-life-in-typescript-a955aec3bd49
 const CANVAS_ID = "#game";
 const CONTEXT_TYPE = "2d";
@@ -29,25 +33,58 @@ const RANDOM_KEY = "r";
 const CLEAR_KEY = "c";
 const HELP_KEY = "?";
 
-const canvas = document.querySelector<HTMLCanvasElement>(CANVAS_ID);
-const context = canvas.getContext(CONTEXT_TYPE);
-// To Do: remove redundant width and height variables, and use canvas.width and canvas.height
-const width = window.innerWidth;
-const height = window.innerHeight;
-const columnsCount = Math.floor(width / TILE_LENGTH);
-const rowsCount = Math.floor(height / TILE_LENGTH);
-
-canvas.width = width;
-canvas.height = height;
-
-context.fillStyle = CONTEXT_CONFIG.fillStyle;
-context.strokeStyle = CONTEXT_CONFIG.strokeStyle;
-context.lineWidth = CONTEXT_CONFIG.lineWidth;
-
+// 🚧 Keep this global variable for now
 let isPaused = false;
 let gameSpeedLoopMs = INITIAL_SPEED_LOOP_MS;
+let currentMouseState = ALIVE;
+let isMouseDown = false;
+let gameBoard;
 
-const prepareBoard = (): boolean[][] => {
+initializeGame();
+
+// ✅ Enclose every instruction in a function
+function initializeGame() {
+  const canvas = document.querySelector<HTMLCanvasElement>(CANVAS_ID);
+  const context = canvas.getContext(CONTEXT_TYPE);
+  const width = window.innerWidth;
+  const height = window.innerHeight;
+  const columnsCount = Math.floor(width / TILE_LENGTH);
+  const rowsCount = Math.floor(height / TILE_LENGTH);
+  const startPaused = false;
+  // ✅ Send everything to requesters
+  gameBoard = prepareBoard(columnsCount, rowsCount);
+  initializeCanvas(canvas, context, width, height);
+  wireCanvasEventHandlers(canvas, context);
+  wireDocumentEventHandlers(document, gameBoard);
+  initializeCells(gameBoard);
+  drawBoard(context, gameBoard);
+  performLoop(context, startPaused);
+}
+
+function initializeCanvas(
+  canvas: HTMLCanvasElement,
+  context: CanvasRenderingContext2D,
+  width: number,
+  height: number
+) {
+  canvas.width = width;
+  canvas.height = height;
+  context.fillStyle = CONTEXT_CONFIG.fillStyle;
+  context.strokeStyle = CONTEXT_CONFIG.strokeStyle;
+  context.lineWidth = CONTEXT_CONFIG.lineWidth;
+}
+
+function initializeCells(gameBoard: boolean[][]) {
+  gameBoard[0][2] = ALIVE;
+  gameBoard[1][0] = ALIVE;
+  gameBoard[1][2] = ALIVE;
+  gameBoard[2][1] = ALIVE;
+  gameBoard[2][2] = ALIVE;
+}
+
+// ✅ Ask for your dependencies
+// ✅ Use function declaration for first class functions
+function prepareBoard(columnsCount: number, rowsCount: number): boolean[][] {
   const board = [];
   for (let columnNumber = 0; columnNumber < columnsCount; columnNumber++) {
     const row = [];
@@ -56,44 +93,34 @@ const prepareBoard = (): boolean[][] => {
     }
     board.push(row);
   }
-  return board;
-};
+  return board; // ✅ Return the result
+}
 
-let gameBoard = prepareBoard();
-
-const clearCanvas = () => {
+function clearCanvas(
+  context: CanvasRenderingContext2D,
+  width: number,
+  height: number
+) {
   context.clearRect(0, 0, width, height);
-};
+}
 
-const drawBoard = () => {
+function drawBoard(context: CanvasRenderingContext2D, gameBoard: boolean[][]) {
+  const columnsCount: number = gameBoard.length;
+  const rowsCount: number = gameBoard[0].length;
   for (let columnNumber = 0; columnNumber < columnsCount; columnNumber++) {
     for (let rowNumber = 0; rowNumber < rowsCount; rowNumber++) {
-      // ✅ Move nested structures to a new function
-      drawCell(rowNumber, columnNumber);
+      drawCell(context, gameBoard, rowNumber, columnNumber);
     }
   }
-};
+}
 
-const isAlive = (columnNumber: number, rowNumber: number): boolean => {
-  // ✅ Move complex conditionals to a new function
-  if (isInsideBoard(columnNumber, rowNumber)) {
-    return gameBoard[columnNumber][rowNumber];
-  } else {
-    return false;
-  }
-};
-
-const isInsideBoard = (columnNumber: number, rowNumber: number): boolean => {
-  // ✅ Separate each condition to conditional instruction
-  if (columnNumber < 0) return false;
-  if (columnNumber >= columnsCount) return false;
-  if (rowNumber < 0) return false;
-  if (rowNumber >= rowsCount) return false;
-  return true;
-};
-
-const drawCell = (rowNumber: number, columnNumber: number) => {
-  if (isAlive(columnNumber, rowNumber)) {
+function drawCell(
+  context: CanvasRenderingContext2D,
+  gameBoard: boolean[][],
+  rowNumber: number,
+  columnNumber: number
+) {
+  if (isAlive(gameBoard, columnNumber, rowNumber)) {
     context.fillRect(
       columnNumber * TILE_LENGTH,
       rowNumber * TILE_LENGTH,
@@ -101,35 +128,62 @@ const drawCell = (rowNumber: number, columnNumber: number) => {
       TILE_LENGTH
     );
   }
-};
+}
 
-gameBoard[1][0] = ALIVE;
-gameBoard[2][1] = ALIVE;
-gameBoard[0][2] = ALIVE;
-gameBoard[1][2] = ALIVE;
-gameBoard[2][2] = ALIVE;
+function isAlive(
+  gameBoard: boolean[][],
+  columnNumber: number,
+  rowNumber: number
+): boolean {
+  const columnsCount: number = gameBoard.length;
+  const rowsCount: number = gameBoard[0].length;
+  if (isInsideBoard(columnNumber, rowNumber, columnsCount, rowsCount)) {
+    return gameBoard[columnNumber][rowNumber];
+  } else {
+    return false;
+  }
+}
 
-const calculateNextGeneration = () => {
-  const board = prepareBoard();
+function isInsideBoard(
+  columnNumber: number,
+  rowNumber: number,
+  columnsCount: number,
+  rowsCount: number
+): boolean {
+  if (columnNumber < 0) return false;
+  if (columnNumber >= columnsCount) return false;
+  if (rowNumber < 0) return false;
+  if (rowNumber >= rowsCount) return false;
+  return true;
+}
+
+function calculateNextGeneration(currentBoard: boolean[][]): boolean[][] {
+  const columnsCount: number = currentBoard.length;
+  const rowsCount: number = currentBoard[0].length;
+  const nextGameBoard = prepareBoard(columnsCount, rowsCount);
   for (let columnNumber = 0; columnNumber < columnsCount; columnNumber++) {
     for (let rowNumber = 0; rowNumber < rowsCount; rowNumber++) {
-      // ✅ Move nested structures to a new function
-      calculateNextGenerationCell(board, rowNumber, columnNumber);
+      const newCellState = calculateNextGenerationCell(
+        currentBoard,
+        rowNumber,
+        columnNumber
+      );
+      nextGameBoard[columnNumber][rowNumber] = newCellState;
     }
   }
-  return board;
-};
+  return nextGameBoard;
+}
 
-const calculateNextGenerationCell = (
-  board: boolean[][],
+function calculateNextGenerationCell(
+  gameBoard: boolean[][],
   rowNumber: number,
   columnNumber: number
-) => {
+) {
   let numberOfLivingNeighbors = 0;
   for (const deltaRow of DELTAS) {
     for (const deltaColumn of DELTAS) {
-      // ✅ Move nested structures to a new function
       numberOfLivingNeighbors = updateLiveNeighbors(
+        gameBoard,
         deltaRow,
         deltaColumn,
         columnNumber,
@@ -138,163 +192,184 @@ const calculateNextGenerationCell = (
       );
     }
   }
-  // ✅ Reduce complexity by moving logic to a new function
-  setNewGenerationCellState(
-    board,
+  return getNewGenerationCellState(
+    gameBoard,
     rowNumber,
     columnNumber,
     numberOfLivingNeighbors
   );
-};
+}
 
-const setNewGenerationCellState = (
-  board: boolean[][],
+function getNewGenerationCellState(
+  gameBoard: boolean[][],
   rowNumber: number,
   columnNumber: number,
   numberOfLivingNeighbors: number
-) => {
-  // Fair enough, but it's not the best way to do it
-  if (isAlive(columnNumber, rowNumber)) {
+) {
+  if (isAlive(gameBoard, columnNumber, rowNumber)) {
     if (canKeepAlive(numberOfLivingNeighbors)) {
-      board[columnNumber][rowNumber] = ALIVE;
+      return ALIVE;
     }
   } else {
     if (canBorn(numberOfLivingNeighbors)) {
-      board[columnNumber][rowNumber] = ALIVE;
+      return ALIVE;
     }
   }
-};
+  return DEAD;
+}
 
-// ✅ A lot of new small functions with names expressing their purpose
-
-const canKeepAlive = (numberOfLivingNeighbors: number) => {
-  // ✅ Remember that each condition is a business rule
+function canKeepAlive(numberOfLivingNeighbors: number): boolean {
   const isMinimum = numberOfLivingNeighbors == MINIMUM_NEIGHBORS_TO_KEEP_ALIVE;
   const isMaximum = numberOfLivingNeighbors == MAXIMUM_NEIGHBORS_TO_KEEP_ALIVE;
   return isMinimum || isMaximum;
-};
-const canBorn = (countLiveNeighbors: number) => {
-  // ✅ But keep it simple
+}
+function canBorn(countLiveNeighbors: number): boolean {
   return countLiveNeighbors == NEEDED_NEIGHBORS_TO_BORN;
-};
+}
 
-const updateLiveNeighbors = (
+function updateLiveNeighbors(
+  gameBoard: boolean[][],
   deltaRow: number,
   deltaColumn: number,
   columnNumber: number,
   rowNumber: number,
   countLiveNeighbors: number
-) => {
-  // Fair enough, but it's not the best way to do it
+): number {
   if (isNotMe(deltaRow, deltaColumn)) {
-    if (isAlive(columnNumber + deltaColumn, rowNumber + deltaRow)) {
+    if (isAlive(gameBoard, columnNumber + deltaColumn, rowNumber + deltaRow)) {
       countLiveNeighbors++;
     }
   }
   return countLiveNeighbors;
-};
+}
 
-const isNotMe = (deltaRow: number, deltaColumn: number) => {
+function isNotMe(deltaRow: number, deltaColumn: number): boolean {
   const hasHorizontalDelta = deltaRow !== 0;
   const hasVerticalDelta = deltaColumn !== 0;
   return hasHorizontalDelta || hasVerticalDelta;
-};
+}
 
-const redrawGameCanvas = () => {
-  clearCanvas();
-  drawBoard();
-};
+function redrawGameCanvas(
+  context: CanvasRenderingContext2D,
+  gameBoard: boolean[][]
+) {
+  const width = context.canvas.width;
+  const height = context.canvas.height;
+  clearCanvas(context, width, height);
+  drawBoard(context, gameBoard);
+}
 
-const drawNextGeneration = () => {
+function drawNextGeneration(
+  context: CanvasRenderingContext2D,
+  isPaused: boolean,
+  gameBoard: boolean[][]
+) {
   if (isPaused) {
     return;
   }
-  gameBoard = calculateNextGeneration();
-  redrawGameCanvas();
-};
+  const nextGameBoard = calculateNextGeneration(gameBoard);
+  redrawGameCanvas(context, nextGameBoard);
+  return nextGameBoard;
+}
 
-const nextGenLoop = () => {
-  drawNextGeneration();
-  setTimeout(nextGenLoop, gameSpeedLoopMs);
-};
-
-nextGenLoop();
+async function performLoop(
+  context: CanvasRenderingContext2D,
+  isPaused: boolean
+) {
+  const newBoard = drawNextGeneration(context, isPaused, gameBoard);
+  gameBoard = newBoard;
+  setTimeout(performLoop, gameSpeedLoopMs, context, isPaused, gameBoard);
+}
 
 /* Canvas user interaction */
-let currentMouseState = ALIVE;
-let isMouseDown = false;
 
-function getPositionFromMouseEvent(mouseEvent: MouseEvent) {
-  // ✅ Divide and conquer
-  const horizontalPixel = getHorizontalPixelFromMouseEvent(mouseEvent);
+// ✅ Homogenize event handlers
+function getPositionFromMouseEvent(
+  mouseEvent: MouseEvent,
+  canvas: HTMLCanvasElement
+) {
+  const horizontalPixel = getHorizontalPixelFromMouseEvent(mouseEvent, canvas);
   const columnNumber = getTileNumberFromPixel(horizontalPixel);
-  const verticalPixel = getVerticalPixelFromMouseEvent(mouseEvent);
+  const verticalPixel = getVerticalPixelFromMouseEvent(mouseEvent, canvas);
   const rowNumber = getTileNumberFromPixel(verticalPixel);
   return [columnNumber, rowNumber];
 }
-function getHorizontalPixelFromMouseEvent(mouseEvent: MouseEvent) {
+function getHorizontalPixelFromMouseEvent(
+  mouseEvent: MouseEvent,
+  canvas: HTMLCanvasElement
+) {
   return mouseEvent.clientX - canvas.offsetLeft;
 }
-function getVerticalPixelFromMouseEvent(mouseEvent: MouseEvent) {
+function getVerticalPixelFromMouseEvent(
+  mouseEvent: MouseEvent,
+  canvas: HTMLCanvasElement
+) {
   return mouseEvent.clientY - canvas.offsetTop;
 }
 function getTileNumberFromPixel(pixel: number) {
   return Math.floor(pixel / TILE_LENGTH);
 }
 
-canvas.addEventListener("mousedown", mouseEvent => {
-  isMouseDown = true;
-  const [columnNumber, rowNumber] = getPositionFromMouseEvent(mouseEvent);
-  // ⚠️ the variable isDrawing got a very bad name
-  // isDrawing = !gameBoard[columnNumber][rowNumber];
-  const stateAtMousePosition = gameBoard[columnNumber][rowNumber];
-  // Toggle state
-  const newToggledState = !stateAtMousePosition;
-  gameBoard[columnNumber][rowNumber] = newToggledState;
-  currentMouseState = newToggledState;
-  redrawGameCanvas();
-});
+function wireCanvasEventHandlers(
+  canvas: HTMLCanvasElement,
+  context: CanvasRenderingContext2D
+) {
+  canvas.addEventListener("mousedown", mouseEvent => {
+    isMouseDown = true;
+    const [columnNumber, rowNumber] = getPositionFromMouseEvent(
+      mouseEvent,
+      canvas
+    );
+    const stateAtMousePosition = gameBoard[columnNumber][rowNumber];
+    const newToggledState = !stateAtMousePosition;
+    gameBoard[columnNumber][rowNumber] = newToggledState;
+    currentMouseState = newToggledState;
+    redrawGameCanvas(context, gameBoard);
+  });
+  canvas.addEventListener("mousemove", mouseEvent => {
+    if (isMouseDown) {
+      const [columnNumber, rowNumber] = getPositionFromMouseEvent(
+        mouseEvent,
+        canvas
+      );
+      gameBoard[columnNumber][rowNumber] = currentMouseState;
+      redrawGameCanvas(context, gameBoard);
+    }
+  });
+  canvas.addEventListener("mouseup", () => {
+    isMouseDown = false;
+  });
+}
 
-canvas.addEventListener("mousemove", mouseEvent => {
-  if (isMouseDown) {
-    const [columnNumber, rowNumber] = getPositionFromMouseEvent(mouseEvent);
-    // ⚠️ the variable isDrawing got a very bad name
-    gameBoard[columnNumber][rowNumber] = currentMouseState;
-    redrawGameCanvas();
-  }
-});
-
-canvas.addEventListener("mouseup", () => {
-  isMouseDown = false;
-});
-
+function wireDocumentEventHandlers(document: Document, gameBoard: boolean[][]) {
+  document.addEventListener("keydown", keyBoardEvent => {
+    const keyPressed = keyBoardEvent.key;
+    const allowedKeys = Object.keys(keyActions);
+    if (allowedKeys.includes(keyPressed)) {
+      const action = keyActions[keyPressed];
+      action(gameBoard);
+    }
+  });
+  document.addEventListener("keydown", keyboardEvent => {
+    if (keyboardEvent.key === HELP_KEY) {
+      toggleHelpModal();
+    }
+  });
+}
 /** Menu listeners */
 
-const generateRandom = () => {
-  const board = prepareBoard();
+function generateRandomGameBoard(gameBoard: boolean[][]) {
+  const columnsCount: number = gameBoard.length;
+  const rowsCount: number = gameBoard[0].length;
+  const randomGameBoard = prepareBoard(columnsCount, rowsCount);
   for (let columnNumber = 0; columnNumber < columnsCount; columnNumber++) {
     for (let rowNumber = 0; rowNumber < rowsCount; rowNumber++) {
-      // ✅ Each operation on its own instruction
       const isRandomlyAlive = Math.random() > LIVING_CHANCE;
-      board[columnNumber][rowNumber] = isRandomlyAlive;
+      randomGameBoard[columnNumber][rowNumber] = isRandomlyAlive;
     }
   }
-  return board;
-};
-
-document.addEventListener("keydown", keyBoardEvent => {
-  console.log(keyBoardEvent);
-  const keyPressed = keyBoardEvent.key;
-  // ✅ Use an object or a dictionary instead os a switch or nested ifs
-  const allowedKeys = Object.keys(keyActions);
-  if (allowedKeys.includes(keyPressed)) {
-    // ✅ get and invoke function
-    const action = keyActions[keyPressed];
-    action();
-  }
-});
-
-// ✅ A dictionary object with values or functions (as in this case)
+  return randomGameBoard;
+}
 const keyActions = {
   [PAUSE_KEY]: () => {
     isPaused = !isPaused;
@@ -311,13 +386,13 @@ const keyActions = {
       gameSpeedLoopMs + DELTA_SPEED_GAME_MS
     );
   },
-  [RANDOM_KEY]: () => {
-    gameBoard = generateRandom();
-    redrawGameCanvas();
+  [RANDOM_KEY]: (currentGameBoard: boolean[][]) => {
+    gameBoard = generateRandomGameBoard(currentGameBoard);
   },
-  [CLEAR_KEY]: () => {
-    gameBoard = prepareBoard();
-    redrawGameCanvas();
+  [CLEAR_KEY]: (currentGameBoard: boolean[][]) => {
+    const columnsCount: number = currentGameBoard.length;
+    const rowsCount: number = currentGameBoard[0].length;
+    gameBoard = prepareBoard(columnsCount, rowsCount);
   },
 };
 
@@ -328,11 +403,4 @@ const helpModal = document.querySelector(HELP_MODAL_ID);
 const toggleHelpModal = () => {
   helpModal.classList.toggle("hidden");
 };
-
-document.addEventListener("keydown", keyboardEvent => {
-  if (keyboardEvent.key === HELP_KEY) {
-    toggleHelpModal();
-  }
-});
-
 helpButton.addEventListener("click", toggleHelpModal);
