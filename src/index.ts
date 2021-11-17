@@ -62,6 +62,7 @@ function initializeGame() {
   wireDocumentEventHandlers(document);
   initializeBoard(gameBoard);
   drawBoard(context, gameBoard);
+  initializeHelp();
   performLoop(context, startPaused);
 }
 
@@ -410,10 +411,12 @@ function generateRandomGameBoard(gameBoard: boolean[][]) {
 }
 
 /* Help button and modal */
-const helpButton = document.querySelector(HELP_BUTTON_ID);
-const helpModal = document.querySelector(HELP_MODAL_ID);
+function initializeHelp() {
+  const helpButton = document.querySelector(HELP_BUTTON_ID);
+  const helpModal = document.querySelector(HELP_MODAL_ID);
 
-const toggleHelpModal = () => {
-  helpModal?.classList.toggle("hidden");
-};
-helpButton?.addEventListener("click", toggleHelpModal);
+  const toggleHelpModal = () => {
+    helpModal?.classList.toggle("hidden");
+  };
+  helpButton?.addEventListener("click", toggleHelpModal);
+}
