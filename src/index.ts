@@ -62,7 +62,7 @@ function initializeGame() {
   wireDocumentEventHandlers(document);
   initializeBoard(gameBoard);
   drawBoard(context, gameBoard);
-  initializeHelp();
+  initializeHelp(document);
   performLoop(context, startPaused);
 }
 
@@ -361,11 +361,6 @@ function wireDocumentEventHandlers(document: Document) {
       action();
     }
   });
-  document.addEventListener("keydown", keyboardEvent => {
-    if (keyboardEvent.key === HELP_KEY) {
-      toggleHelpModal();
-    }
-  });
 }
 /** Menu listeners */
 
@@ -411,12 +406,17 @@ function generateRandomGameBoard(gameBoard: boolean[][]) {
 }
 
 /* Help button and modal */
-function initializeHelp() {
+function initializeHelp(document: Document) {
   const helpButton = document.querySelector(HELP_BUTTON_ID);
   const helpModal = document.querySelector(HELP_MODAL_ID);
 
   const toggleHelpModal = () => {
     helpModal?.classList.toggle("hidden");
   };
+  document.addEventListener("keydown", keyboardEvent => {
+    if (keyboardEvent.key === HELP_KEY) {
+      toggleHelpModal();
+    }
+  });
   helpButton?.addEventListener("click", toggleHelpModal);
 }
