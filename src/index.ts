@@ -50,51 +50,94 @@ const mouseState = {
   current: LIVING_RULES.alive,
   isDown: false,
 };
-let gameBoard: boolean[][];
 
-//  ✅ Function for initialize the game
+type GameBoard = boolean[][];
+
+let gameBoard: GameBoard;
+
+type CanvasContext = {
+  canvas: HTMLCanvasElement;
+  context: CanvasRenderingContext2D;
+  size: {
+    height: number;
+    width: number;
+  }
+};
+
+type BoardSize = {
+  columnsCount: number;
+  rowsCount: number;
+}
+
 initializeGame();
 
-// ✅ Enclose every instruction in a function
+
 function initializeGame() {
   console.log("initialization");
   const canvas = document.querySelector<HTMLCanvasElement>(CANVAS_CONFIG.id);
   if (!canvas) return;
   const context: CanvasRenderingContext2D | null = canvas.getContext("2d");
   if (!context) return;
-  const width = window.innerWidth;
-  const height = window.innerHeight;
-  const columnsCount = Math.floor(width / CANVAS_CONFIG.tileLength);
-  const rowsCount = Math.floor(height / CANVAS_CONFIG.tileLength);
-  const startPaused = false;
-  // ✅ Send everything to requesters
-  gameBoard = prepareBoard(columnsCount, rowsCount);
-  initializeCanvas(canvas, context, width, height);
-  wireCanvasEventHandlers(canvas, context);
+  const canvasContext: CanvasContext = {
+    canvas,
+    context,
+    size: { height : window.innerHeight, width: window.innerWidth },
+  };
+  const boardSize: BoardSize = {
+    columnsCount: Math.floor(
+      canvasContext.size.width / CANVAS_CONFIG.tileLength
+    ),
+    rowsCount: Math.floor(canvasContext.size.height / CANVAS_CONFIG.tileLength),
+  };
+  gameBoard = prepareBoard(boardSize);
+  initializeCanvas(canvasContext);
+  wireCanvasEventHandlers(canvasContext);
   wireDocumentEventHandlers(document);
   initializeBoard(gameBoard);
-  drawBoard(context, gameBoard);
+  drawBoard(canvasContext, gameBoard);
   initializeHelp(document);
-  performLoop(context, startPaused);
+  performLoop(canvasContext, boardSize, gameStatus);
 }
 
-// ✅ Ask for your dependencies
-// ✅ Use function declaration for first class functions
+
+async function performLoop(
+  canvasContext: CanvasContext,
+  boardSize: BoardSize,
+  gameStatus: { isPaused: boolean; speedLoopMs: number }
+) {
+  // 🚧 Accessing global variables 🚧
+  if (gameStatus.isPaused) {
+    return;
+  }
+  const newBoard: GameBoard = drawNextGeneration(
+    canvasContext,
+    boardSize,
+    gameBoard
+  );
+  gameBoard = newBoard;
+  setTimeout(
+    performLoop,
+    gameStatus.speedLoopMs,
+    canvasContext,
+    boardSize,
+    gameStatus,
+    gameBoard
+  );
+}
+
+
 
 function initializeCanvas(
-  canvas: HTMLCanvasElement,
-  context: CanvasRenderingContext2D,
-  width: number,
-  height: number
+  canvasContext:CanvasContext
 ) {
-  canvas.width = width;
-  canvas.height = height;
-  context.fillStyle = CANVAS_CONFIG.fillStyle;
-  context.strokeStyle = CANVAS_CONFIG.strokeStyle;
-  context.lineWidth = CANVAS_CONFIG.lineWidth;
+  canvasContext.canvas.width = canvasContext.size.width;
+  canvasContext.canvas.height = canvasContext.size.height;
+  canvasContext.context.fillStyle = CANVAS_CONFIG.fillStyle;
+  canvasContext.context.strokeStyle = CANVAS_CONFIG.strokeStyle;
+  canvasContext.context.lineWidth = CANVAS_CONFIG.lineWidth;
 }
 
-function initializeBoard(gameBoard: boolean[][]) {
+function initializeBoard(gameBoard: GameBoard) {
   gameBoard[0][2] = LIVING_RULES.alive;
   gameBoard[1][0] = LIVING_RULES.alive;
   gameBoard[1][2] = LIVING_RULES.alive;
@@ -102,11 +145,15 @@ function initializeBoard(gameBoard: boolean[][]) {
   gameBoard[2][2] = LIVING_RULES.alive;
 }
 
-function prepareBoard(columnsCount: number, rowsCount: number): boolean[][] {
+function prepareBoard(boardSize: BoardSize): GameBoard {
   const board = [];
-  for (let columnNumber = 0; columnNumber < columnsCount; columnNumber++) {
+  for (
+    let columnNumber = 0;
+    columnNumber < boardSize.columnsCount;
+    columnNumber++
+  ) {
     const row = [];
-    for (let rowNumber = 0; rowNumber < rowsCount; rowNumber++) {
+    for (let rowNumber = 0; rowNumber < boardSize.rowsCount; rowNumber++) {
       row.push(LIVING_RULES.dead);
     }
     board.push(row);
@@ -114,20 +161,21 @@ function prepareBoard(columnsCount: number, rowsCount: number): boolean[][] {
   return board;
 }
 
-function clearCanvas(
-  context: CanvasRenderingContext2D,
-  width: number,
-  height: number
-) {
-  context.clearRect(0, 0, width, height);
+function clearCanvas(canvasContext: CanvasContext) {
+  canvasContext.context.clearRect(
+    0,
+    0,
+    canvasContext.size.width,
+    canvasContext.size.height
+  );
 }
 
-function drawBoard(context: CanvasRenderingContext2D, gameBoard: boolean[][]) {
+function drawBoard(canvasContext: CanvasContext, gameBoard: GameBoard) {
   const columnsCount: number = gameBoard.length;
   const rowsCount: number = gameBoard[0].length;
   for (let columnNumber = 0; columnNumber < columnsCount; columnNumber++) {
     for (let rowNumber = 0; rowNumber < rowsCount; rowNumber++) {
-      drawCell(context, gameBoard, rowNumber, columnNumber);
+      drawCell(canvasContext.context, gameBoard, rowNumber, columnNumber);
     }
   }
 }
@@ -175,12 +223,16 @@ function isInsideBoard(
   return true;
 }
 
-function calculateNextGeneration(currentBoard: boolean[][]): boolean[][] {
-  const columnsCount: number = currentBoard.length;
-  const rowsCount: number = currentBoard[0].length;
-  const nextGameBoard = prepareBoard(columnsCount, rowsCount);
-  for (let columnNumber = 0; columnNumber < columnsCount; columnNumber++) {
-    for (let rowNumber = 0; rowNumber < rowsCount; rowNumber++) {
+function calculateNextGeneration(
+  currentBoard:GameBoard, boardSize: BoardSize
+):GameBoard {
+  const nextGameBoard = prepareBoard(boardSize);
+  for (
+    let columnNumber = 0;
+    columnNumber < boardSize.columnsCount;
+    columnNumber++
+  ) {
+    for (let rowNumber = 0; rowNumber < boardSize.rowsCount; rowNumber++) {
       const newCellState = calculateNextGenerationCell(
         currentBoard,
         rowNumber,
@@ -193,7 +245,7 @@ function calculateNextGeneration(currentBoard: boolean[][]): boolean[][] {
 }
 
 function calculateNextGenerationCell(
-  gameBoard: boolean[][],
+  gameBoard:GameBoard,
   rowNumber: number,
   columnNumber: number
 ) {
@@ -219,7 +271,7 @@ function calculateNextGenerationCell(
 }
 
 function hasLiveNeighbor(
-  gameBoard: boolean[][],
+  gameBoard: GameBoard,
   deltaRow: number,
   deltaColumn: number,
   columnNumber: number,
@@ -234,7 +286,7 @@ function hasLiveNeighbor(
 }
 
 function getNewGenerationCellState(
-  gameBoard: boolean[][],
+  gameBoard: GameBoard,
   rowNumber: number,
   columnNumber: number,
   numberOfLivingNeighbors: number
@@ -269,41 +321,24 @@ function isNotMe(deltaRow: number, deltaColumn: number): boolean {
 }
 
 function redrawGameCanvas(
-  context: CanvasRenderingContext2D,
-  gameBoard: boolean[][]
+  canvasContext: CanvasContext,
+  gameBoard: GameBoard
 ) {
-  const width = context.canvas.width;
-  const height = context.canvas.height;
-  clearCanvas(context, width, height);
-  drawBoard(context, gameBoard);
+  clearCanvas(canvasContext);
+  drawBoard(canvasContext, gameBoard);
 }
 
 function drawNextGeneration(
-  context: CanvasRenderingContext2D,
-  isPaused: boolean,
-  gameBoard: boolean[][]
-): boolean[][] {
-  const nextGameBoard = calculateNextGeneration(gameBoard);
-  redrawGameCanvas(context, nextGameBoard);
+  canvasContext: CanvasContext,
+  boardSize: BoardSize,
+  gameBoard: GameBoard
+): GameBoard {
+  const nextGameBoard = calculateNextGeneration(gameBoard, boardSize);
+  redrawGameCanvas(canvasContext, nextGameBoard);
   return nextGameBoard;
 }
 
-async function performLoop(
-  context: CanvasRenderingContext2D,
-  isPaused: boolean
-) {
-  // 🚧 Accessing global variables 🚧
-  if (isPaused) {
-    return;
-  }
-  const newBoard: boolean[][] = drawNextGeneration(
-    context,
-    isPaused,
-    gameBoard
-  );
-  gameBoard = newBoard;
-  setTimeout(performLoop, gameStatus.speedLoopMs, context, isPaused, gameBoard);
-}
+
 
 /* Canvas user interaction */
 
@@ -334,34 +369,31 @@ function getTileNumberFromPixel(pixel: number) {
   return Math.floor(pixel / CANVAS_CONFIG.tileLength);
 }
 
-function wireCanvasEventHandlers(
-  canvas: HTMLCanvasElement,
-  context: CanvasRenderingContext2D
-) {
+function wireCanvasEventHandlers(canvasContext: CanvasContext) {
   // 🚧 Accessing global variable gameBoard 🚧
-  canvas.addEventListener("mousedown", mouseEvent => {
+  canvasContext.canvas.addEventListener("mousedown", mouseEvent => {
     mouseState.isDown = true;
     const [columnNumber, rowNumber] = getPositionFromMouseEvent(
       mouseEvent,
-      canvas
+      canvasContext.canvas
     );
     const stateAtMousePosition = gameBoard[columnNumber][rowNumber];
     const newToggledState = !stateAtMousePosition;
     gameBoard[columnNumber][rowNumber] = newToggledState;
     mouseState.current = newToggledState;
-    redrawGameCanvas(context, gameBoard);
+    redrawGameCanvas(canvasContext, gameBoard);
   });
-  canvas.addEventListener("mousemove", mouseEvent => {
+  canvasContext.canvas.addEventListener("mousemove", mouseEvent => {
     if (mouseState.isDown) {
       const [columnNumber, rowNumber] = getPositionFromMouseEvent(
         mouseEvent,
-        canvas
+        canvasContext.canvas
       );
       gameBoard[columnNumber][rowNumber] = mouseState.current;
-      redrawGameCanvas(context, gameBoard);
+      redrawGameCanvas(canvasContext, gameBoard);
     }
   });
-  canvas.addEventListener("mouseup", () => {
+  canvasContext.canvas.addEventListener("mouseup", () => {
     mouseState.isDown = false;
   });
 }
@@ -402,14 +434,14 @@ const keyActions: Record<string, () => void> = {
     // 🚧 Accessing global variable gameBoard 🚧
     const columnsCount: number = gameBoard.length;
     const rowsCount: number = gameBoard[0].length;
-    gameBoard = prepareBoard(columnsCount, rowsCount);
+    gameBoard = prepareBoard({columnsCount, rowsCount});
   },
 };
 
-function generateRandomGameBoard(gameBoard: boolean[][]) {
+function generateRandomGameBoard(gameBoard: GameBoard) {
   const columnsCount: number = gameBoard.length;
   const rowsCount: number = gameBoard[0].length;
-  const randomGameBoard = prepareBoard(columnsCount, rowsCount);
+  const randomGameBoard = prepareBoard({ columnsCount, rowsCount });
   for (let columnNumber = 0; columnNumber < columnsCount; columnNumber++) {
     for (let rowNumber = 0; rowNumber < rowsCount; rowNumber++) {
       const isRandomlyAlive = Math.random() > LIVING_RULES.randomLivingChance;

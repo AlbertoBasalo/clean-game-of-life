@@ -46,9 +46,7 @@ const mouseState = {
     isDown: false,
 };
 let gameBoard;
-//  ✅ Function for initialize the game
 initializeGame();
-// ✅ Enclose every instruction in a function
 function initializeGame() {
     console.log("initialization");
     const canvas = document.querySelector(CANVAS_CONFIG.id);
@@ -57,29 +55,39 @@ function initializeGame() {
     const context = canvas.getContext("2d");
     if (!context)
         return;
-    const width = window.innerWidth;
-    const height = window.innerHeight;
-    const columnsCount = Math.floor(width / CANVAS_CONFIG.tileLength);
-    const rowsCount = Math.floor(height / CANVAS_CONFIG.tileLength);
-    const startPaused = false;
-    // ✅ Send everything to requesters
-    gameBoard = prepareBoard(columnsCount, rowsCount);
-    initializeCanvas(canvas, context, width, height);
-    wireCanvasEventHandlers(canvas, context);
+    const canvasContext = {
+        canvas,
+        context,
+        size: { height: window.innerHeight, width: window.innerWidth },
+    };
+    const boardSize = {
+        columnsCount: Math.floor(canvasContext.size.width / CANVAS_CONFIG.tileLength),
+        rowsCount: Math.floor(canvasContext.size.height / CANVAS_CONFIG.tileLength),
+    };
+    gameBoard = prepareBoard(boardSize);
+    initializeCanvas(canvasContext);
+    wireCanvasEventHandlers(canvasContext);
     wireDocumentEventHandlers(document);
     initializeBoard(gameBoard);
-    drawBoard(context, gameBoard);
+    drawBoard(canvasContext, gameBoard);
     initializeHelp(document);
-    performLoop(context, startPaused);
+    performLoop(canvasContext, boardSize, gameStatus);
 }
-// ✅ Ask for your dependencies
-// ✅ Use function declaration for first class functions
-function initializeCanvas(canvas, context, width, height) {
-    canvas.width = width;
-    canvas.height = height;
-    context.fillStyle = CANVAS_CONFIG.fillStyle;
-    context.strokeStyle = CANVAS_CONFIG.strokeStyle;
-    context.lineWidth = CANVAS_CONFIG.lineWidth;
+async function performLoop(canvasContext, boardSize, gameStatus) {
+    // 🚧 Accessing global variables 🚧
+    if (gameStatus.isPaused) {
+        return;
+    }
+    const newBoard = drawNextGeneration(canvasContext, boardSize, gameBoard);
+    gameBoard = newBoard;
+    setTimeout(performLoop, gameStatus.speedLoopMs, canvasContext, boardSize, gameStatus, gameBoard);
+}
+function initializeCanvas(canvasContext) {
+    canvasContext.canvas.width = canvasContext.size.width;
+    canvasContext.canvas.height = canvasContext.size.height;
+    canvasContext.context.fillStyle = CANVAS_CONFIG.fillStyle;
+    canvasContext.context.strokeStyle = CANVAS_CONFIG.strokeStyle;
+    canvasContext.context.lineWidth = CANVAS_CONFIG.lineWidth;
 }
 function initializeBoard(gameBoard) {
     gameBoard[0][2] = LIVING_RULES.alive;
@@ -88,26 +96,26 @@ function initializeBoard(gameBoard) {
     gameBoard[2][1] = LIVING_RULES.alive;
     gameBoard[2][2] = LIVING_RULES.alive;
 }
-function prepareBoard(columnsCount, rowsCount) {
+function prepareBoard(boardSize) {
     const board = [];
-    for (let columnNumber = 0; columnNumber < columnsCount; columnNumber++) {
+    for (let columnNumber = 0; columnNumber < boardSize.columnsCount; columnNumber++) {
         const row = [];
-        for (let rowNumber = 0; rowNumber < rowsCount; rowNumber++) {
+        for (let rowNumber = 0; rowNumber < boardSize.rowsCount; rowNumber++) {
             row.push(LIVING_RULES.dead);
         }
         board.push(row);
     }
     return board;
 }
-function clearCanvas(context, width, height) {
-    context.clearRect(0, 0, width, height);
+function clearCanvas(canvasContext) {
+    canvasContext.context.clearRect(0, 0, canvasContext.size.width, canvasContext.size.height);
 }
-function drawBoard(context, gameBoard) {
+function drawBoard(canvasContext, gameBoard) {
     const columnsCount = gameBoard.length;
     const rowsCount = gameBoard[0].length;
     for (let columnNumber = 0; columnNumber < columnsCount; columnNumber++) {
         for (let rowNumber = 0; rowNumber < rowsCount; rowNumber++) {
-            drawCell(context, gameBoard, rowNumber, columnNumber);
+            drawCell(canvasContext.context, gameBoard, rowNumber, columnNumber);
         }
     }
 }
@@ -137,12 +145,10 @@ function isInsideBoard(columnNumber, rowNumber, columnsCount, rowsCount) {
         return false;
     return true;
 }
-function calculateNextGeneration(currentBoard) {
-    const columnsCount = currentBoard.length;
-    const rowsCount = currentBoard[0].length;
-    const nextGameBoard = prepareBoard(columnsCount, rowsCount);
-    for (let columnNumber = 0; columnNumber < columnsCount; columnNumber++) {
-        for (let rowNumber = 0; rowNumber < rowsCount; rowNumber++) {
+function calculateNextGeneration(currentBoard, boardSize) {
+    const nextGameBoard = prepareBoard(boardSize);
+    for (let columnNumber = 0; columnNumber < boardSize.columnsCount; columnNumber++) {
+        for (let rowNumber = 0; rowNumber < boardSize.rowsCount; rowNumber++) {
             const newCellState = calculateNextGenerationCell(currentBoard, rowNumber, columnNumber);
             nextGameBoard[columnNumber][rowNumber] = newCellState;
         }
@@ -193,25 +199,14 @@ function isNotMe(deltaRow, deltaColumn) {
     const hasVerticalDelta = deltaColumn !== 0;
     return hasHorizontalDelta || hasVerticalDelta;
 }
-function redrawGameCanvas(context, gameBoard) {
-    const width = context.canvas.width;
-    const height = context.canvas.height;
-    clearCanvas(context, width, height);
-    drawBoard(context, gameBoard);
+function redrawGameCanvas(canvasContext, gameBoard) {
+    clearCanvas(canvasContext);
+    drawBoard(canvasContext, gameBoard);
 }
-function drawNextGeneration(context, isPaused, gameBoard) {
-    const nextGameBoard = calculateNextGeneration(gameBoard);
-    redrawGameCanvas(context, nextGameBoard);
+function drawNextGeneration(canvasContext, boardSize, gameBoard) {
+    const nextGameBoard = calculateNextGeneration(gameBoard, boardSize);
+    redrawGameCanvas(canvasContext, nextGameBoard);
     return nextGameBoard;
-}
-async function performLoop(context, isPaused) {
-    // 🚧 Accessing global variables 🚧
-    if (isPaused) {
-        return;
-    }
-    const newBoard = drawNextGeneration(context, isPaused, gameBoard);
-    gameBoard = newBoard;
-    setTimeout(performLoop, gameStatus.speedLoopMs, context, isPaused, gameBoard);
 }
 /* Canvas user interaction */
 // ✅ Homogenize event handlers
@@ -231,25 +226,25 @@ function getVerticalPixelFromMouseEvent(mouseEvent, canvas) {
 function getTileNumberFromPixel(pixel) {
     return Math.floor(pixel / CANVAS_CONFIG.tileLength);
 }
-function wireCanvasEventHandlers(canvas, context) {
+function wireCanvasEventHandlers(canvasContext) {
     // 🚧 Accessing global variable gameBoard 🚧
-    canvas.addEventListener("mousedown", mouseEvent => {
+    canvasContext.canvas.addEventListener("mousedown", mouseEvent => {
         mouseState.isDown = true;
-        const [columnNumber, rowNumber] = getPositionFromMouseEvent(mouseEvent, canvas);
+        const [columnNumber, rowNumber] = getPositionFromMouseEvent(mouseEvent, canvasContext.canvas);
         const stateAtMousePosition = gameBoard[columnNumber][rowNumber];
         const newToggledState = !stateAtMousePosition;
         gameBoard[columnNumber][rowNumber] = newToggledState;
         mouseState.current = newToggledState;
-        redrawGameCanvas(context, gameBoard);
+        redrawGameCanvas(canvasContext, gameBoard);
     });
-    canvas.addEventListener("mousemove", mouseEvent => {
+    canvasContext.canvas.addEventListener("mousemove", mouseEvent => {
         if (mouseState.isDown) {
-            const [columnNumber, rowNumber] = getPositionFromMouseEvent(mouseEvent, canvas);
+            const [columnNumber, rowNumber] = getPositionFromMouseEvent(mouseEvent, canvasContext.canvas);
             gameBoard[columnNumber][rowNumber] = mouseState.current;
-            redrawGameCanvas(context, gameBoard);
+            redrawGameCanvas(canvasContext, gameBoard);
         }
     });
-    canvas.addEventListener("mouseup", () => {
+    canvasContext.canvas.addEventListener("mouseup", () => {
         mouseState.isDown = false;
     });
 }
@@ -282,13 +277,13 @@ const keyActions = {
         // 🚧 Accessing global variable gameBoard 🚧
         const columnsCount = gameBoard.length;
         const rowsCount = gameBoard[0].length;
-        gameBoard = prepareBoard(columnsCount, rowsCount);
+        gameBoard = prepareBoard({ columnsCount, rowsCount });
     },
 };
 function generateRandomGameBoard(gameBoard) {
     const columnsCount = gameBoard.length;
     const rowsCount = gameBoard[0].length;
-    const randomGameBoard = prepareBoard(columnsCount, rowsCount);
+    const randomGameBoard = prepareBoard({ columnsCount, rowsCount });
     for (let columnNumber = 0; columnNumber < columnsCount; columnNumber++) {
         for (let rowNumber = 0; rowNumber < rowsCount; rowNumber++) {
             const isRandomlyAlive = Math.random() > LIVING_RULES.randomLivingChance;

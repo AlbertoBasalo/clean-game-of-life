@@ -38,3 +38,4 @@
 
 - Avoid primitives in constant configuration
 - Avoid primitives in global state
+- Reduce arguments on functions
