@@ -33,3 +33,8 @@
 - Enclose every instruction in a initializing function
 - Do not use fat arrow for first class functions
 - Homogenize event handlers
+
+## 5 - Data
+
+- Avoid primitives in constant configuration
+- Avoid primitives in global state

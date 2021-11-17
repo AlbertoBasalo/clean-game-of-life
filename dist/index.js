@@ -4,27 +4,32 @@
 // 🚧 Use functional programming style
 // 🚧 No global variables
 // https://medium.com/hypersphere-codes/conways-game-of-life-in-typescript-a955aec3bd49
-const CANVAS_ID = "#game";
-const CONTEXT_TYPE = "2d";
-const TILE_LENGTH = 10;
-const CONTEXT_CONFIG = {
+const CANVAS_CONFIG = {
+    id: "#game",
+    tileLength: 10,
     fillStyle: "#f73454",
     strokeStyle: "#f73454",
     lineWidth: 1,
 };
-const INITIAL_SPEED_LOOP_MS = 1000;
-const MINIMUM_NEIGHBORS_TO_KEEP_ALIVE = 2;
-const MAXIMUM_NEIGHBORS_TO_KEEP_ALIVE = 3;
-const NEEDED_NEIGHBORS_TO_BORN = 3;
-const ALIVE = true;
-const DEAD = false;
-const DELTAS = [-1, 0, 1];
-const LIVING_CHANCE = 0.9;
-const MAXIMUM_SPEED_GAME_LOOP_MS = 50;
-const MINIMUM_SPEED_GAME_LOOP_MS = 2000;
-const DELTA_SPEED_GAME_MS = 50;
-const HELP_BUTTON_ID = "#help-btn";
-const HELP_MODAL_ID = "#help-msg";
+const GAME_SETTINGS = {
+    initialSpeedLoopMs: 1000,
+    maximumSpeedLoopMs: 50,
+    minimumSpeedLoopMs: 200,
+    deltaSpeedMs: 50,
+};
+const LIVING_RULES = {
+    minimumNeighborsToKeepAlive: 2,
+    maximumNeighborsToKeepAlive: 3,
+    neededNeighborsToBorn: 3,
+    alive: true,
+    dead: false,
+    randomLivingChance: 0.9,
+    neighborDeltas: [-1, 0, 1],
+};
+const HELP_ELEMENTS = {
+    buttonId: "#help-btn",
+    modalId: "#help-msg",
+};
 const PAUSE_KEY = "p";
 const INCREASE_KEY = "+";
 const DECREASE_KEY = "-";
@@ -32,26 +37,30 @@ const RANDOM_KEY = "r";
 const CLEAR_KEY = "c";
 const HELP_KEY = "?";
 // 🚧 Keep this global variable for now 🚧
-let isPaused = false;
-let gameSpeedLoopMs = INITIAL_SPEED_LOOP_MS;
-let currentMouseState = ALIVE;
-let isMouseDown = false;
+const gameStatus = {
+    isPaused: false,
+    speedLoopMs: GAME_SETTINGS.initialSpeedLoopMs,
+};
+const mouseState = {
+    current: LIVING_RULES.alive,
+    isDown: false,
+};
 let gameBoard;
 //  ✅ Function for initialize the game
 initializeGame();
 // ✅ Enclose every instruction in a function
 function initializeGame() {
     console.log("initialization");
-    const canvas = document.querySelector(CANVAS_ID);
+    const canvas = document.querySelector(CANVAS_CONFIG.id);
     if (!canvas)
         return;
-    const context = canvas.getContext(CONTEXT_TYPE);
+    const context = canvas.getContext("2d");
     if (!context)
         return;
     const width = window.innerWidth;
     const height = window.innerHeight;
-    const columnsCount = Math.floor(width / TILE_LENGTH);
-    const rowsCount = Math.floor(height / TILE_LENGTH);
+    const columnsCount = Math.floor(width / CANVAS_CONFIG.tileLength);
+    const rowsCount = Math.floor(height / CANVAS_CONFIG.tileLength);
     const startPaused = false;
     // ✅ Send everything to requesters
     gameBoard = prepareBoard(columnsCount, rowsCount);
@@ -60,6 +69,7 @@ function initializeGame() {
     wireDocumentEventHandlers(document);
     initializeBoard(gameBoard);
     drawBoard(context, gameBoard);
+    initializeHelp(document);
     performLoop(context, startPaused);
 }
 // ✅ Ask for your dependencies
@@ -67,23 +77,23 @@ function initializeGame() {
 function initializeCanvas(canvas, context, width, height) {
     canvas.width = width;
     canvas.height = height;
-    context.fillStyle = CONTEXT_CONFIG.fillStyle;
-    context.strokeStyle = CONTEXT_CONFIG.strokeStyle;
-    context.lineWidth = CONTEXT_CONFIG.lineWidth;
+    context.fillStyle = CANVAS_CONFIG.fillStyle;
+    context.strokeStyle = CANVAS_CONFIG.strokeStyle;
+    context.lineWidth = CANVAS_CONFIG.lineWidth;
 }
 function initializeBoard(gameBoard) {
-    gameBoard[0][2] = ALIVE;
-    gameBoard[1][0] = ALIVE;
-    gameBoard[1][2] = ALIVE;
-    gameBoard[2][1] = ALIVE;
-    gameBoard[2][2] = ALIVE;
+    gameBoard[0][2] = LIVING_RULES.alive;
+    gameBoard[1][0] = LIVING_RULES.alive;
+    gameBoard[1][2] = LIVING_RULES.alive;
+    gameBoard[2][1] = LIVING_RULES.alive;
+    gameBoard[2][2] = LIVING_RULES.alive;
 }
 function prepareBoard(columnsCount, rowsCount) {
     const board = [];
     for (let columnNumber = 0; columnNumber < columnsCount; columnNumber++) {
         const row = [];
         for (let rowNumber = 0; rowNumber < rowsCount; rowNumber++) {
-            row.push(DEAD);
+            row.push(LIVING_RULES.dead);
         }
         board.push(row);
     }
@@ -103,7 +113,7 @@ function drawBoard(context, gameBoard) {
 }
 function drawCell(context, gameBoard, rowNumber, columnNumber) {
     if (isAlive(gameBoard, columnNumber, rowNumber)) {
-        context.fillRect(columnNumber * TILE_LENGTH, rowNumber * TILE_LENGTH, TILE_LENGTH, TILE_LENGTH);
+        context.fillRect(columnNumber * CANVAS_CONFIG.tileLength, rowNumber * CANVAS_CONFIG.tileLength, CANVAS_CONFIG.tileLength, CANVAS_CONFIG.tileLength);
     }
 }
 function isAlive(gameBoard, columnNumber, rowNumber) {
@@ -141,8 +151,8 @@ function calculateNextGeneration(currentBoard) {
 }
 function calculateNextGenerationCell(gameBoard, rowNumber, columnNumber) {
     let numberOfLivingNeighbors = 0;
-    for (const deltaRow of DELTAS) {
-        for (const deltaColumn of DELTAS) {
+    for (const deltaRow of LIVING_RULES.neighborDeltas) {
+        for (const deltaColumn of LIVING_RULES.neighborDeltas) {
             const hasLivingNeighbor = hasLiveNeighbor(gameBoard, deltaRow, deltaColumn, columnNumber, rowNumber);
             numberOfLivingNeighbors += hasLivingNeighbor ? 1 : 0;
         }
@@ -160,23 +170,23 @@ function hasLiveNeighbor(gameBoard, deltaRow, deltaColumn, columnNumber, rowNumb
 function getNewGenerationCellState(gameBoard, rowNumber, columnNumber, numberOfLivingNeighbors) {
     if (isAlive(gameBoard, columnNumber, rowNumber)) {
         if (canKeepAlive(numberOfLivingNeighbors)) {
-            return ALIVE;
+            return LIVING_RULES.alive;
         }
     }
     else {
         if (canBorn(numberOfLivingNeighbors)) {
-            return ALIVE;
+            return LIVING_RULES.alive;
         }
     }
-    return DEAD;
+    return LIVING_RULES.dead;
 }
 function canKeepAlive(numberOfLivingNeighbors) {
-    const isMinimum = numberOfLivingNeighbors == MINIMUM_NEIGHBORS_TO_KEEP_ALIVE;
-    const isMaximum = numberOfLivingNeighbors == MAXIMUM_NEIGHBORS_TO_KEEP_ALIVE;
+    const isMinimum = numberOfLivingNeighbors == LIVING_RULES.minimumNeighborsToKeepAlive;
+    const isMaximum = numberOfLivingNeighbors == LIVING_RULES.maximumNeighborsToKeepAlive;
     return isMinimum || isMaximum;
 }
 function canBorn(countLiveNeighbors) {
-    return countLiveNeighbors == NEEDED_NEIGHBORS_TO_BORN;
+    return countLiveNeighbors == LIVING_RULES.neededNeighborsToBorn;
 }
 function isNotMe(deltaRow, deltaColumn) {
     const hasHorizontalDelta = deltaRow !== 0;
@@ -201,7 +211,7 @@ async function performLoop(context, isPaused) {
     }
     const newBoard = drawNextGeneration(context, isPaused, gameBoard);
     gameBoard = newBoard;
-    setTimeout(performLoop, gameSpeedLoopMs, context, isPaused, gameBoard);
+    setTimeout(performLoop, gameStatus.speedLoopMs, context, isPaused, gameBoard);
 }
 /* Canvas user interaction */
 // ✅ Homogenize event handlers
@@ -219,28 +229,28 @@ function getVerticalPixelFromMouseEvent(mouseEvent, canvas) {
     return mouseEvent.clientY - canvas.offsetTop;
 }
 function getTileNumberFromPixel(pixel) {
-    return Math.floor(pixel / TILE_LENGTH);
+    return Math.floor(pixel / CANVAS_CONFIG.tileLength);
 }
 function wireCanvasEventHandlers(canvas, context) {
     // 🚧 Accessing global variable gameBoard 🚧
     canvas.addEventListener("mousedown", mouseEvent => {
-        isMouseDown = true;
+        mouseState.isDown = true;
         const [columnNumber, rowNumber] = getPositionFromMouseEvent(mouseEvent, canvas);
         const stateAtMousePosition = gameBoard[columnNumber][rowNumber];
         const newToggledState = !stateAtMousePosition;
         gameBoard[columnNumber][rowNumber] = newToggledState;
-        currentMouseState = newToggledState;
+        mouseState.current = newToggledState;
         redrawGameCanvas(context, gameBoard);
     });
     canvas.addEventListener("mousemove", mouseEvent => {
-        if (isMouseDown) {
+        if (mouseState.isDown) {
             const [columnNumber, rowNumber] = getPositionFromMouseEvent(mouseEvent, canvas);
-            gameBoard[columnNumber][rowNumber] = currentMouseState;
+            gameBoard[columnNumber][rowNumber] = mouseState.current;
             redrawGameCanvas(context, gameBoard);
         }
     });
     canvas.addEventListener("mouseup", () => {
-        isMouseDown = false;
+        mouseState.isDown = false;
     });
 }
 function wireDocumentEventHandlers(document) {
@@ -252,22 +262,17 @@ function wireDocumentEventHandlers(document) {
             action();
         }
     });
-    document.addEventListener("keydown", keyboardEvent => {
-        if (keyboardEvent.key === HELP_KEY) {
-            toggleHelpModal();
-        }
-    });
 }
 /** Menu listeners */
 const keyActions = {
     [PAUSE_KEY]: () => {
-        isPaused = !isPaused;
+        gameStatus.isPaused = !gameStatus.isPaused;
     },
     [INCREASE_KEY]: () => {
-        gameSpeedLoopMs = Math.max(MAXIMUM_SPEED_GAME_LOOP_MS, gameSpeedLoopMs - DELTA_SPEED_GAME_MS);
+        gameStatus.speedLoopMs = Math.max(GAME_SETTINGS.maximumSpeedLoopMs, gameStatus.speedLoopMs - GAME_SETTINGS.deltaSpeedMs);
     },
     [DECREASE_KEY]: () => {
-        gameSpeedLoopMs = Math.min(MINIMUM_SPEED_GAME_LOOP_MS, gameSpeedLoopMs + DELTA_SPEED_GAME_MS);
+        gameStatus.speedLoopMs = Math.min(GAME_SETTINGS.minimumSpeedLoopMs, gameStatus.speedLoopMs + GAME_SETTINGS.deltaSpeedMs);
     },
     [RANDOM_KEY]: () => {
         // 🚧 Accessing global variable gameBoard 🚧
@@ -286,16 +291,23 @@ function generateRandomGameBoard(gameBoard) {
     const randomGameBoard = prepareBoard(columnsCount, rowsCount);
     for (let columnNumber = 0; columnNumber < columnsCount; columnNumber++) {
         for (let rowNumber = 0; rowNumber < rowsCount; rowNumber++) {
-            const isRandomlyAlive = Math.random() > LIVING_CHANCE;
+            const isRandomlyAlive = Math.random() > LIVING_RULES.randomLivingChance;
             randomGameBoard[columnNumber][rowNumber] = isRandomlyAlive;
         }
     }
     return randomGameBoard;
 }
 /* Help button and modal */
-const helpButton = document.querySelector(HELP_BUTTON_ID);
-const helpModal = document.querySelector(HELP_MODAL_ID);
-const toggleHelpModal = () => {
-    helpModal?.classList.toggle("hidden");
-};
-helpButton?.addEventListener("click", toggleHelpModal);
+function initializeHelp(document) {
+    const helpButton = document.querySelector(HELP_ELEMENTS.buttonId);
+    const helpModal = document.querySelector(HELP_ELEMENTS.modalId);
+    const toggleHelpModal = () => {
+        helpModal?.classList.toggle("hidden");
+    };
+    helpButton?.addEventListener("click", toggleHelpModal);
+    document.addEventListener("keydown", keyboardEvent => {
+        if (keyboardEvent.key === HELP_KEY) {
+            toggleHelpModal();
+        }
+    });
+}
