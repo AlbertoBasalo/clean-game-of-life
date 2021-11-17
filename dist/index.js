@@ -1,3 +1,4 @@
+"use strict";
 /* eslint-disable max-lines */
 // 🚧 Reduce complexity
 // 🚧 Use functional programming style
@@ -30,17 +31,23 @@ const DECREASE_KEY = "-";
 const RANDOM_KEY = "r";
 const CLEAR_KEY = "c";
 const HELP_KEY = "?";
-// 🚧 Keep this global variable for now
+// 🚧 Keep this global variable for now 🚧
 let isPaused = false;
 let gameSpeedLoopMs = INITIAL_SPEED_LOOP_MS;
 let currentMouseState = ALIVE;
 let isMouseDown = false;
 let gameBoard;
+//  ✅ Function for initialize the game
 initializeGame();
 // ✅ Enclose every instruction in a function
 function initializeGame() {
+    console.log("initialization");
     const canvas = document.querySelector(CANVAS_ID);
+    if (!canvas)
+        return;
     const context = canvas.getContext(CONTEXT_TYPE);
+    if (!context)
+        return;
     const width = window.innerWidth;
     const height = window.innerHeight;
     const columnsCount = Math.floor(width / TILE_LENGTH);
@@ -50,11 +57,13 @@ function initializeGame() {
     gameBoard = prepareBoard(columnsCount, rowsCount);
     initializeCanvas(canvas, context, width, height);
     wireCanvasEventHandlers(canvas, context);
-    wireDocumentEventHandlers(document, gameBoard);
-    initializeCells(gameBoard);
+    wireDocumentEventHandlers(document);
+    initializeBoard(gameBoard);
     drawBoard(context, gameBoard);
     performLoop(context, startPaused);
 }
+// ✅ Ask for your dependencies
+// ✅ Use function declaration for first class functions
 function initializeCanvas(canvas, context, width, height) {
     canvas.width = width;
     canvas.height = height;
@@ -62,15 +71,13 @@ function initializeCanvas(canvas, context, width, height) {
     context.strokeStyle = CONTEXT_CONFIG.strokeStyle;
     context.lineWidth = CONTEXT_CONFIG.lineWidth;
 }
-function initializeCells(gameBoard) {
+function initializeBoard(gameBoard) {
     gameBoard[0][2] = ALIVE;
     gameBoard[1][0] = ALIVE;
     gameBoard[1][2] = ALIVE;
     gameBoard[2][1] = ALIVE;
     gameBoard[2][2] = ALIVE;
 }
-// ✅ Ask for your dependencies
-// ✅ Use function declaration for first class functions
 function prepareBoard(columnsCount, rowsCount) {
     const board = [];
     for (let columnNumber = 0; columnNumber < columnsCount; columnNumber++) {
@@ -80,7 +87,7 @@ function prepareBoard(columnsCount, rowsCount) {
         }
         board.push(row);
     }
-    return board; // ✅ Return the result
+    return board;
 }
 function clearCanvas(context, width, height) {
     context.clearRect(0, 0, width, height);
@@ -136,10 +143,19 @@ function calculateNextGenerationCell(gameBoard, rowNumber, columnNumber) {
     let numberOfLivingNeighbors = 0;
     for (const deltaRow of DELTAS) {
         for (const deltaColumn of DELTAS) {
-            numberOfLivingNeighbors = updateLiveNeighbors(gameBoard, deltaRow, deltaColumn, columnNumber, rowNumber, numberOfLivingNeighbors);
+            const hasLivingNeighbor = hasLiveNeighbor(gameBoard, deltaRow, deltaColumn, columnNumber, rowNumber);
+            numberOfLivingNeighbors += hasLivingNeighbor ? 1 : 0;
         }
     }
     return getNewGenerationCellState(gameBoard, rowNumber, columnNumber, numberOfLivingNeighbors);
+}
+function hasLiveNeighbor(gameBoard, deltaRow, deltaColumn, columnNumber, rowNumber) {
+    if (isNotMe(deltaRow, deltaColumn)) {
+        if (isAlive(gameBoard, columnNumber + deltaColumn, rowNumber + deltaRow)) {
+            return true;
+        }
+    }
+    return false;
 }
 function getNewGenerationCellState(gameBoard, rowNumber, columnNumber, numberOfLivingNeighbors) {
     if (isAlive(gameBoard, columnNumber, rowNumber)) {
@@ -162,14 +178,6 @@ function canKeepAlive(numberOfLivingNeighbors) {
 function canBorn(countLiveNeighbors) {
     return countLiveNeighbors == NEEDED_NEIGHBORS_TO_BORN;
 }
-function updateLiveNeighbors(gameBoard, deltaRow, deltaColumn, columnNumber, rowNumber, countLiveNeighbors) {
-    if (isNotMe(deltaRow, deltaColumn)) {
-        if (isAlive(gameBoard, columnNumber + deltaColumn, rowNumber + deltaRow)) {
-            countLiveNeighbors++;
-        }
-    }
-    return countLiveNeighbors;
-}
 function isNotMe(deltaRow, deltaColumn) {
     const hasHorizontalDelta = deltaRow !== 0;
     const hasVerticalDelta = deltaColumn !== 0;
@@ -182,14 +190,15 @@ function redrawGameCanvas(context, gameBoard) {
     drawBoard(context, gameBoard);
 }
 function drawNextGeneration(context, isPaused, gameBoard) {
-    if (isPaused) {
-        return;
-    }
     const nextGameBoard = calculateNextGeneration(gameBoard);
     redrawGameCanvas(context, nextGameBoard);
     return nextGameBoard;
 }
 async function performLoop(context, isPaused) {
+    // 🚧 Accessing global variables 🚧
+    if (isPaused) {
+        return;
+    }
     const newBoard = drawNextGeneration(context, isPaused, gameBoard);
     gameBoard = newBoard;
     setTimeout(performLoop, gameSpeedLoopMs, context, isPaused, gameBoard);
@@ -213,6 +222,7 @@ function getTileNumberFromPixel(pixel) {
     return Math.floor(pixel / TILE_LENGTH);
 }
 function wireCanvasEventHandlers(canvas, context) {
+    // 🚧 Accessing global variable gameBoard 🚧
     canvas.addEventListener("mousedown", mouseEvent => {
         isMouseDown = true;
         const [columnNumber, rowNumber] = getPositionFromMouseEvent(mouseEvent, canvas);
@@ -233,13 +243,13 @@ function wireCanvasEventHandlers(canvas, context) {
         isMouseDown = false;
     });
 }
-function wireDocumentEventHandlers(document, gameBoard) {
+function wireDocumentEventHandlers(document) {
     document.addEventListener("keydown", keyBoardEvent => {
         const keyPressed = keyBoardEvent.key;
         const allowedKeys = Object.keys(keyActions);
         if (allowedKeys.includes(keyPressed)) {
             const action = keyActions[keyPressed];
-            action(gameBoard);
+            action();
         }
     });
     document.addEventListener("keydown", keyboardEvent => {
@@ -249,6 +259,27 @@ function wireDocumentEventHandlers(document, gameBoard) {
     });
 }
 /** Menu listeners */
+const keyActions = {
+    [PAUSE_KEY]: () => {
+        isPaused = !isPaused;
+    },
+    [INCREASE_KEY]: () => {
+        gameSpeedLoopMs = Math.max(MAXIMUM_SPEED_GAME_LOOP_MS, gameSpeedLoopMs - DELTA_SPEED_GAME_MS);
+    },
+    [DECREASE_KEY]: () => {
+        gameSpeedLoopMs = Math.min(MINIMUM_SPEED_GAME_LOOP_MS, gameSpeedLoopMs + DELTA_SPEED_GAME_MS);
+    },
+    [RANDOM_KEY]: () => {
+        // 🚧 Accessing global variable gameBoard 🚧
+        gameBoard = generateRandomGameBoard(gameBoard);
+    },
+    [CLEAR_KEY]: () => {
+        // 🚧 Accessing global variable gameBoard 🚧
+        const columnsCount = gameBoard.length;
+        const rowsCount = gameBoard[0].length;
+        gameBoard = prepareBoard(columnsCount, rowsCount);
+    },
+};
 function generateRandomGameBoard(gameBoard) {
     const columnsCount = gameBoard.length;
     const rowsCount = gameBoard[0].length;
@@ -261,29 +292,10 @@ function generateRandomGameBoard(gameBoard) {
     }
     return randomGameBoard;
 }
-const keyActions = {
-    [PAUSE_KEY]: () => {
-        isPaused = !isPaused;
-    },
-    [INCREASE_KEY]: () => {
-        gameSpeedLoopMs = Math.max(MAXIMUM_SPEED_GAME_LOOP_MS, gameSpeedLoopMs - DELTA_SPEED_GAME_MS);
-    },
-    [DECREASE_KEY]: () => {
-        gameSpeedLoopMs = Math.min(MINIMUM_SPEED_GAME_LOOP_MS, gameSpeedLoopMs + DELTA_SPEED_GAME_MS);
-    },
-    [RANDOM_KEY]: (currentGameBoard) => {
-        gameBoard = generateRandomGameBoard(currentGameBoard);
-    },
-    [CLEAR_KEY]: (currentGameBoard) => {
-        const columnsCount = currentGameBoard.length;
-        const rowsCount = currentGameBoard[0].length;
-        gameBoard = prepareBoard(columnsCount, rowsCount);
-    },
-};
 /* Help button and modal */
 const helpButton = document.querySelector(HELP_BUTTON_ID);
 const helpModal = document.querySelector(HELP_MODAL_ID);
 const toggleHelpModal = () => {
-    helpModal.classList.toggle("hidden");
+    helpModal?.classList.toggle("hidden");
 };
-helpButton.addEventListener("click", toggleHelpModal);
+helpButton?.addEventListener("click", toggleHelpModal);

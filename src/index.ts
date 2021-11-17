@@ -45,8 +45,11 @@ initializeGame();
 
 // ✅ Enclose every instruction in a function
 function initializeGame() {
+  console.log("initialization");
   const canvas = document.querySelector<HTMLCanvasElement>(CANVAS_ID);
+  if (!canvas) return;
   const context = canvas.getContext(CONTEXT_TYPE);
+  if (!context) return;
   const width = window.innerWidth;
   const height = window.innerHeight;
   const columnsCount = Math.floor(width / TILE_LENGTH);
@@ -211,7 +214,7 @@ function hasLiveNeighbor(
 ): boolean {
   if (isNotMe(deltaRow, deltaColumn)) {
     if (isAlive(gameBoard, columnNumber + deltaColumn, rowNumber + deltaRow)) {
-      true;
+      return true;
     }
   }
   return false;
@@ -264,10 +267,7 @@ function drawNextGeneration(
   context: CanvasRenderingContext2D,
   isPaused: boolean,
   gameBoard: boolean[][]
-) {
-  if (isPaused) {
-    return;
-  }
+): boolean[][] {
   const nextGameBoard = calculateNextGeneration(gameBoard);
   redrawGameCanvas(context, nextGameBoard);
   return nextGameBoard;
@@ -277,8 +277,15 @@ async function performLoop(
   context: CanvasRenderingContext2D,
   isPaused: boolean
 ) {
-  // 🚧 Accessing global variable gameBoard 🚧
-  const newBoard = drawNextGeneration(context, isPaused, gameBoard);
+  // 🚧 Accessing global variables 🚧
+  if (isPaused) {
+    return;
+  }
+  const newBoard: boolean[][] = drawNextGeneration(
+    context,
+    isPaused,
+    gameBoard
+  );
   gameBoard = newBoard;
   setTimeout(performLoop, gameSpeedLoopMs, context, isPaused, gameBoard);
 }
@@ -361,7 +368,7 @@ function wireDocumentEventHandlers(document: Document) {
 }
 /** Menu listeners */
 
-const keyActions = {
+const keyActions: Record<string, () => void> = {
   [PAUSE_KEY]: () => {
     isPaused = !isPaused;
   },
@@ -407,6 +414,6 @@ const helpButton = document.querySelector(HELP_BUTTON_ID);
 const helpModal = document.querySelector(HELP_MODAL_ID);
 
 const toggleHelpModal = () => {
-  helpModal.classList.toggle("hidden");
+  helpModal?.classList.toggle("hidden");
 };
-helpButton.addEventListener("click", toggleHelpModal);
+helpButton?.addEventListener("click", toggleHelpModal);

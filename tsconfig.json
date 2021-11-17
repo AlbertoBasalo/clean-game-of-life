@@ -1,5 +1,9 @@
 {
   "compilerOptions": {
-    "target": "esnext"
+    "target": "esnext",
+    "outDir": "dist",
+    "forceConsistentCasingInFileNames": true,
+    "importHelpers": true,
+    "strict": true
   }
 }
