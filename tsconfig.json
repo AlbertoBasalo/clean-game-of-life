@@ -2,6 +2,7 @@
   "compilerOptions": {
     "target": "esnext",
     "outDir": "dist",
+    "module": "ESNext",
     "forceConsistentCasingInFileNames": true,
     "importHelpers": true,
     "strict": true

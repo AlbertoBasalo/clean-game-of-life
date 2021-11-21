@@ -1,4 +1,12 @@
 {
-  "editor.formatOnType": false,
-  "editor.formatOnSave": false
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.formatOnType": true,
+  "typescript.format.insertSpaceAfterTypeAssertion": true
 }

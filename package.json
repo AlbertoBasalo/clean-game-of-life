@@ -8,6 +8,7 @@
     "url": "https://twitter.com/albertobasalo"
   },
   "private": false,
+  "type": "module",
   "dependencies": {
     "typescript": "^4.4.4"
   },
