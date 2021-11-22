@@ -1,6 +1,6 @@
-import { Board, BoardSize, Position } from "./board";
-import { CanvasPainter } from "./canvas-painter";
-import { Game } from "./game";
+import { Board, BoardSize, Position } from "./board.js";
+import { CanvasPainter } from "./canvas-painter.js";
+import { Game } from "./game.js";
 
 export class GoL {
   private canvasPainter: CanvasPainter;

@@ -4,8 +4,6 @@ export var CellStatus;
     CellStatus[CellStatus["Alive"] = 1] = "Alive";
 })(CellStatus || (CellStatus = {}));
 export class Board {
-    size;
-    cells;
     constructor(size) {
         this.size = size;
         this.cells = this.create();

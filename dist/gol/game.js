@@ -1,6 +1,5 @@
 import { Board, CellStatus } from "./board.js";
 export class Game {
-    board;
     constructor(board) {
         this.board = board;
         this.initializeFixed();

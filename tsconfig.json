@@ -1,14 +1,14 @@
 {
   "compilerOptions": {
-    "allowJs": true,
-    "checkJs": true,
     "forceConsistentCasingInFileNames": true,
     "importHelpers": true,
+    "module": "ES6",
     "noImplicitAny": true,
     "noImplicitReturns": true,
-    "sourceMap": true,
+    "outDir": "dist",
+    "sourceMap": false,
     "strict": true,
-    "target": "ES5"
+    "target": "ES6"
   },
   "include": ["src/**/*"]
 }

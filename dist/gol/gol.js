@@ -2,16 +2,11 @@ import { Board } from "./board.js";
 import { CanvasPainter } from "./canvas-painter.js";
 import { Game } from "./game.js";
 export class GoL {
-    window;
-    document;
-    canvasPainter;
-    game;
-    boardSize;
-    isGamePaused = false;
-    loopSpeedMs = 1000;
     constructor(window, document) {
         this.window = window;
         this.document = document;
+        this.isGamePaused = false;
+        this.loopSpeedMs = 1000;
         this.canvasPainter = this.initializeCanvas();
         this.boardSize = this.canvasPainter.getSizeInTiles();
         this.game = this.buildGame();

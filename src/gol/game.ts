@@ -1,4 +1,4 @@
-import { Board, CellStatus, Position } from "./board";
+import { Board, CellStatus, Position } from "./board.js";
 
 export class Game {
   constructor(private board: Board) {

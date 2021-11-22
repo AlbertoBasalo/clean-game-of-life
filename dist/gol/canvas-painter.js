@@ -1,7 +1,4 @@
 export class CanvasPainter {
-    size;
-    canvas;
-    context;
     constructor(window, document) {
         this.size = this.getSize(window);
         this.canvas = this.getCanvas(document);
