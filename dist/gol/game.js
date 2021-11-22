@@ -1,7 +1,8 @@
 import { Board, CellStatus } from "./board.js";
 export class Game {
-    constructor(board) {
+    constructor(board, painter) {
         this.board = board;
+        this.painter = painter;
         this.initializeFixed();
     }
     initializeFixed() {
@@ -22,9 +23,21 @@ export class Game {
             }
         }
     }
-    setNextGenerationBoard() {
+    performNextGeneration() {
         const nextBoard = this.getNextBoardFromCurrentBoard();
         this.setCurrentFromNextBoard(nextBoard);
+        this.drawGameStatus();
+    }
+    drawGameStatus() {
+        this.painter.clear();
+        for (let column = 0; column < this.board.size.columns; column++) {
+            for (let row = 0; row < this.board.size.rows; row++) {
+                const cell = { column, row };
+                if (this.isAlive(cell)) {
+                    this.painter.fillCell(column, row);
+                }
+            }
+        }
     }
     isAlive(cell) {
         return this.board.getStatus(cell) === CellStatus.Alive;
@@ -75,6 +88,7 @@ export class Game {
         return isMinimum || isMaximum;
     }
     getRules() {
+        // To Do: get config like a dependency on constructor
         const LIVING_RULES = {
             minimumNeighborsToKeepAlive: 2,
             maximumNeighborsToKeepAlive: 3,

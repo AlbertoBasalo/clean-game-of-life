@@ -8,10 +8,11 @@ export class GoL {
         this.isGamePaused = false;
         this.loopSpeedMs = 1000;
         this.canvasPainter = this.initializeCanvas();
-        this.boardSize = this.canvasPainter.getSizeInTiles();
         this.game = this.buildGame();
         this.wireUserEvents();
-        this.playGame();
+    }
+    playGame() {
+        setInterval(this.performLoop.bind(this), this.loopSpeedMs);
     }
     initializeCanvas() {
         const canvas = new CanvasPainter(this.window, this.document);
@@ -19,33 +20,20 @@ export class GoL {
         return canvas;
     }
     buildGame() {
-        const board = new Board(this.boardSize);
-        return new Game(board);
+        const boardSize = this.canvasPainter.getSizeInTiles();
+        const board = new Board(boardSize);
+        return new Game(board, this.canvasPainter);
     }
     wireUserEvents() {
         this.document.addEventListener("keydown", keyBoardEvent => { });
-        this.canvasPainter.canvas.addEventListener("mousedown", mouseEvent => { });
-        this.canvasPainter.canvas.addEventListener("mousemove", mouseEvent => { });
-        this.canvasPainter.canvas.addEventListener("mouseup", () => { });
-    }
-    playGame() {
-        setInterval(this.performLoop.bind(this), this.loopSpeedMs);
+        const canvas = this.canvasPainter.canvas;
+        canvas.addEventListener("mousedown", mouseEvent => { });
+        canvas.addEventListener("mousemove", mouseEvent => { });
+        canvas.addEventListener("mouseup", () => { });
     }
     performLoop() {
         if (this.isGamePaused)
             return;
-        this.game.setNextGenerationBoard();
-        this.canvasPainter.clear();
-        this.drawGameStatus();
-    }
-    drawGameStatus() {
-        for (let column = 0; column < this.boardSize.columns; column++) {
-            for (let row = 0; row < this.boardSize.rows; row++) {
-                const cell = { column, row };
-                if (this.game.isAlive(cell)) {
-                    this.canvasPainter.fillCell(column, row);
-                }
-            }
-        }
+        this.game.performNextGeneration();
     }
 }

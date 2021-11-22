@@ -17,6 +17,9 @@ export class CanvasPainter {
   public clear() {
     this.context.clearRect(0, 0, this.size.width, this.size.height);
   }
+
+  // To do: use types to encapsulare coordinates
+
   public fillCell(column: number, row: number) {
     const tileLength = this.getConfig().tileLength;
     this.context.fillRect(
@@ -65,7 +68,7 @@ export class CanvasPainter {
     return { width: window.innerWidth, height: window.innerHeight };
   }
   private getConfig() {
-    // To Do: get like a dependency on constructor
+    // To Do: get config like a dependency on constructor
     const CANVAS_CONFIG = {
       id: "#game",
       tileLength: 10,

@@ -1,7 +1,8 @@
 import { Board, CellStatus, Position } from "./board.js";
+import { CanvasPainter } from "./canvas-painter.js";
 
 export class Game {
-  constructor(private board: Board) {
+  constructor(private board: Board, private painter: CanvasPainter) {
     this.initializeFixed();
   }
 
@@ -24,11 +25,24 @@ export class Game {
       }
     }
   }
-  public setNextGenerationBoard() {
+  public performNextGeneration() {
     const nextBoard = this.getNextBoardFromCurrentBoard();
     this.setCurrentFromNextBoard(nextBoard);
+    this.drawGameStatus();
   }
-  public isAlive(cell: Position): boolean {
+  private drawGameStatus() {
+    this.painter.clear();
+    for (let column = 0; column < this.board.size.columns; column++) {
+      for (let row = 0; row < this.board.size.rows; row++) {
+        const cell: Position = { column, row };
+        if (this.isAlive(cell)) {
+          this.painter.fillCell(column, row);
+        }
+      }
+    }
+  }
+
+  private isAlive(cell: Position): boolean {
     return this.board.getStatus(cell) === CellStatus.Alive;
   }
 
@@ -84,6 +98,7 @@ export class Game {
     return isMinimum || isMaximum;
   }
   private getRules() {
+    // To Do: get config like a dependency on constructor
     const LIVING_RULES = {
       minimumNeighborsToKeepAlive: 2,
       maximumNeighborsToKeepAlive: 3,
