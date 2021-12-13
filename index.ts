@@ -1,4 +1,8 @@
-// https://medium.com/hypersphere-codes/conways-game-of-life-in-typescript-a955aec3bd49
+/* Game of life
+ * source of inspiration
+ * https://medium.com/hypersphere-codes/conways-game-of-life-in-typescript-a955aec3bd49
+ */
+
 const canvas = document.querySelector<HTMLCanvasElement>("#game");
 // const width = canvas.width;
 // const height = canvas.height;
