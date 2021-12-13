@@ -84,7 +84,7 @@ const isAlive = (columnNumber: number, rowNumber: number): boolean => {
 };
 
 const isInsideBoard = (columnNumber: number, rowNumber: number): boolean => {
-  // ✅ Separate each condition to conditional instruction
+  // ✅ Separate each condition to a conditional instruction
   if (columnNumber < 0) return false;
   if (columnNumber >= columnsCount) return false;
   if (rowNumber < 0) return false;
@@ -129,7 +129,7 @@ const calculateNextGenerationCell = (
   for (const deltaRow of DELTAS) {
     for (const deltaColumn of DELTAS) {
       // ✅ Move nested structures to a new function
-      numberOfLivingNeighbors = updateLiveNeighbors(
+      numberOfLivingNeighbors = updateLivingNeighbors(
         deltaRow,
         deltaColumn,
         columnNumber,
@@ -178,20 +178,20 @@ const canBorn = (countLiveNeighbors: number) => {
   return countLiveNeighbors == NEEDED_NEIGHBORS_TO_BORN;
 };
 
-const updateLiveNeighbors = (
+const updateLivingNeighbors = (
   deltaRow: number,
   deltaColumn: number,
   columnNumber: number,
   rowNumber: number,
-  countLiveNeighbors: number
+  countLivingNeighbors: number
 ) => {
-  // Fair enough, but it's not the best way to do it
+  // ⚠️ Fair enough, but it's not the best way to do it
   if (isNotMe(deltaRow, deltaColumn)) {
     if (isAlive(columnNumber + deltaColumn, rowNumber + deltaRow)) {
-      countLiveNeighbors++;
+      countLivingNeighbors++;
     }
   }
-  return countLiveNeighbors;
+  return countLivingNeighbors;
 };
 
 const isNotMe = (deltaRow: number, deltaColumn: number) => {
@@ -285,7 +285,7 @@ const generateRandom = () => {
 document.addEventListener("keydown", keyBoardEvent => {
   console.log(keyBoardEvent);
   const keyPressed = keyBoardEvent.key;
-  // ✅ Use an object or a dictionary instead os a switch or nested ifs
+  // ✅ Use an object or a dictionary instead of a switch or nested ifs
   const allowedKeys = Object.keys(keyActions);
   if (allowedKeys.includes(keyPressed)) {
     // ✅ get and invoke function
