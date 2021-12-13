@@ -1,6 +1,9 @@
 /* eslint-disable max-lines */
 
-// https://medium.com/hypersphere-codes/conways-game-of-life-in-typescript-a955aec3bd49
+/* Game of life
+ * source of inspiration
+ * https://medium.com/hypersphere-codes/conways-game-of-life-in-typescript-a955aec3bd49
+ */
 
 // ✅ Constant section at the beginning
 // No magic numbers
@@ -43,7 +46,7 @@ const height = window.innerHeight;
 const columnsCount = Math.floor(width / TILE_LENGTH);
 const rowsCount = Math.floor(height / TILE_LENGTH);
 
-// ✅ ONE blank line allow to keep the code readable
+// ✅ A SINGLE blank line is enough to keep the code readable
 
 canvas.width = width;
 canvas.height = height;
@@ -52,8 +55,8 @@ context.fillStyle = CONTEXT_CONFIG.fillStyle;
 context.strokeStyle = CONTEXT_CONFIG.strokeStyle;
 context.lineWidth = CONTEXT_CONFIG.lineWidth;
 
-let isPaused = false; // ✅ Boolean variables start with a verb
-let gameSpeedLoopMs = INITIAL_SPEED_LOOP_MS; // ✅ Measure variables contains the unit of measure
+let isPaused = false; // ✅ Boolean variables must start with a conditional verb (is, has, can...)
+let gameSpeedLoopMs = INITIAL_SPEED_LOOP_MS; // ✅ Measure variables should contain the unit of measure
 
 const prepareBoard = (): boolean[][] => {
   // ✅ Always use full names for variables
@@ -111,11 +114,12 @@ gameBoard[0][2] = ALIVE;
 gameBoard[1][2] = ALIVE;
 gameBoard[2][2] = ALIVE;
 
+// ✅ The more expressive the best for functions
 const calculateNextGeneration = () => {
   const board = prepareBoard();
   for (let columnNumber = 0; columnNumber < columnsCount; columnNumber++) {
     for (let rowNumber = 0; rowNumber < rowsCount; rowNumber++) {
-      // ✅ The more expressive the best
+      // ✅ The more expressive the best also for variables
       let numberOfLivingNeighbors = 0;
       for (const deltaRow of DELTAS) {
         for (const deltaColumn of DELTAS) {
